@@ -471,7 +471,8 @@ const AI_LIST = [
   {nama:"Copilot", url:"https://copilot.microsoft.com/"},
   {nama:"Qwen", url:"https://chat.qwen.ai/"},
   {nama:"Le Chat", url:"https://chat.mistral.ai/"},
-  {nama:"Perplexity", url:"https://www.perplexity.ai/"}
+  {nama:"Perplexity", url:"https://www.perplexity.ai/"},
+  {nama:"Canva", url:"https://www.canva.com/"}
 ];
 </script>
 
@@ -689,10 +690,10 @@ function buildPrompt(d){
   const jenisObj = JENIS.find(j=>j.id===d.jenis);
   const bentukObj = BENTUK.find(b=>b.id===d.bentuk);
   const L = [];
-  L.push("🎯 PROMPT PEMBUAT MEDIA PEMBELAJARAN INTERAKTIF");
-  L.push(d.judul);
+  L.push("🎯 BUAT MEDIA PEMBELAJARAN INTERAKTIF");
   L.push("");
-  L.push("Tempel seluruh prompt ini ke AI. Semua yang perlu diganti sudah terisi — AI tinggal membangun.");
+  L.push('"' + d.judul + '"');
+  L.push("");
   L.push("");
   L.push("─── A. KONFIGURASI ───");
   L.push("Judul media       : " + d.judul);
