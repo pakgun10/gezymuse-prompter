@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RPP Prompter — Generator Prompt Perangkat Pembelajaran</title>
+<style>
+  :root{
+    --navy:#1B2A4A; --navy2:#243b63; --gold:#F5B301; --gold2:#d99e00;
+    --bg:#F4F6FB; --card:#ffffff; --ink:#1e2a3a; --muted:#6b7a90;
+    --line:#e3e9f2; --green:#22c55e; --red:#ef4444; --radius:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.55;}
+  header.top{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 70%,#2f4a7d 100%);
+    color:#fff; padding:34px 20px 30px; text-align:center; position:sticky; top:0; z-index:50;
+    box-shadow:0 4px 18px rgba(27,42,74,.35);}
+  header.top h1{font-size:clamp(1.6rem,4vw,2.4rem); letter-spacing:.5px;}
+  header.top h1 .gold{color:var(--gold);}
+  header.top p{opacity:.88; margin-top:6px; font-size:clamp(.85rem,2.4vw,1rem);}
+  .badge{display:inline-block; background:rgba(245,179,1,.16); border:1px solid var(--gold);
+    color:var(--gold); font-size:.75rem; padding:3px 12px; border-radius:999px; margin-top:10px;}
+  main{max-width:980px; margin:0 auto; padding:24px 16px 90px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px; margin-bottom:20px; box-shadow:0 2px 10px rgba(27,42,74,.06);}
+  .card h2{font-size:1.15rem; color:var(--navy); margin-bottom:4px; display:flex; align-items:center; gap:8px;}
+  .card h2 .num{background:var(--navy); color:#fff; width:28px; height:28px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; flex:none;}
+  .card .desc{color:var(--muted); font-size:.88rem; margin-bottom:16px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+  @media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr;}}
+  label.f{display:block; font-weight:600; font-size:.88rem; margin-bottom:6px; color:var(--navy);}
+  label.f .req{color:var(--red);}
+  .hint{font-size:.78rem; color:var(--muted); margin-top:4px;}
+  input[type=text],input[type=number],select,textarea{
+    width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:.95rem; font-family:inherit; background:#fff; color:var(--ink);}
+  input:focus,select:focus,textarea:focus{outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(27,42,74,.12);}
+  textarea{min-height:74px; resize:vertical;}
+  input.invalid,select.invalid,textarea.invalid{border-color:var(--red); box-shadow:0 0 0 3px rgba(239,68,68,.12);}
+  .opt-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:10px;}
+  .opt{position:relative;}
+  .opt input{position:absolute; opacity:0; pointer-events:none;}
+  .opt .box{border:2px solid var(--line); border-radius:12px; padding:13px 12px; cursor:pointer;
+    transition:.15s; background:#fff; height:100%;}
+  .opt .box:hover{border-color:#b9c6da;}
+  .opt input:checked + .box{border-color:var(--navy); background:#eef3fb; box-shadow:0 0 0 3px rgba(27,42,74,.12);}
+  .opt .box .t{font-weight:700; font-size:.92rem; color:var(--navy);}
+  .opt .box .d{font-size:.8rem; color:var(--muted); margin-top:3px;}
+  .checks{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  @media(max-width:560px){.checks{grid-template-columns:1fr;}}
+  .chk{display:flex; gap:10px; align-items:flex-start; background:#f8fafd; border:1px solid var(--line);
+    border-radius:10px; padding:10px 12px; cursor:pointer; font-size:.88rem;}
+  .chk input{margin-top:3px; width:17px; height:17px; accent-color:var(--navy); flex:none;}
+  .chk small{display:block; color:var(--muted); font-size:.78rem;}
+  .btn{display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; font-family:inherit;
+    font-weight:700; border-radius:12px; padding:13px 26px; font-size:1rem; transition:.15s;}
+  .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--navy); box-shadow:0 4px 14px rgba(245,179,1,.4);}
+  .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(245,179,1,.5);}
+  .btn-navy{background:var(--navy); color:#fff;}
+  .btn-navy:hover{background:var(--navy2);}
+  .btn-ghost{background:#fff; color:var(--navy); border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--navy);}
+  .btn-sm{padding:8px 14px; font-size:.85rem; border-radius:9px;}
+  .btn-danger{background:#fee2e2; color:#b91c1c; border:1px solid #fecaca;}
+  .center{text-align:center; margin:26px 0 8px;}
+  .gen-btn{font-size:1.15rem; padding:16px 44px;}
+  #outputCard{display:none;}
+  #outputCard.show{display:block; animation:fadeUp .35s ease;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(12px);}to{opacity:1; transform:none;}}
+  pre#promptOut{background:#0f1b30; color:#dbe7ff; border-radius:12px; padding:18px; font-size:.82rem;
+    line-height:1.6; max-height:480px; overflow:auto; white-space:pre-wrap; word-wrap:break-word;
+    font-family:"Cascadia Code",Consolas,"Courier New",monospace;}
+  .out-actions{display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 4px;}
+  .lib-item{border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:10px;
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:#fbfcff;}
+  .lib-item .meta{flex:1; min-width:200px;}
+  .lib-item .meta .jt{font-weight:700; color:var(--navy);}
+  .lib-item .meta .js{font-size:.8rem; color:var(--muted);}
+  .lib-item .acts{display:flex; gap:6px; flex-wrap:wrap;}
+  .empty-lib{text-align:center; color:var(--muted); padding:26px 10px; font-size:.9rem;}
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+    background:var(--navy); color:#fff; padding:12px 22px; border-radius:999px; font-size:.9rem;
+    opacity:0; transition:.25s; z-index:200; box-shadow:0 6px 20px rgba(0,0,0,.25); pointer-events:none;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  footer{background:var(--navy); color:#cdd8ea; text-align:center; padding:22px 16px; font-size:.88rem;}
+  footer .gold{color:var(--gold); font-weight:700;}
+  .sample-link{background:none; border:none; color:var(--navy); font-size:.82rem; cursor:pointer;
+    text-decoration:underline; font-family:inherit; padding:0;}
+  .sec-head-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:4px;}
+  .dd{position:relative;}
+  .dd-btn{width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:10px; background:#fff;
+    font-size:.95rem; font-family:inherit; color:var(--ink); text-align:left; cursor:pointer;
+    display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .dd-btn:focus{outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(27,42,74,.12);}
+  .dd-btn .arr{color:var(--muted);}
+  #ddCount{background:var(--navy); color:#fff; font-size:.72rem; border-radius:999px; padding:1px 9px; font-weight:700;}
+  #ddCount:empty{display:none;}
+  .dd-panel{position:absolute; top:calc(100% + 6px); left:0; right:0; background:#fff; border:1.5px solid var(--line);
+    border-radius:12px; box-shadow:0 10px 30px rgba(27,42,74,.18); z-index:60; max-height:320px; overflow:auto;
+    display:none; padding:6px;}
+  .dd.open .dd-panel{display:block;}
+  .dd-item{display:flex; gap:10px; align-items:flex-start; padding:9px 10px; border-radius:8px; cursor:pointer; font-size:.87rem;}
+  .dd-item:hover{background:#f2f6fc;}
+  .dd-item input{margin-top:3px; width:16px; height:16px; accent-color:var(--navy); flex:none;}
+  .dd-item small{display:block; color:var(--muted); font-size:.76rem;}
+  .ai-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .ai-label{font-size:.85rem; font-weight:700; color:var(--navy); margin-top:16px;}
+  .auto-note{background:#fffbeb; border:1px solid #fde68a; color:#92400e; font-size:.8rem;
+    border-radius:10px; padding:9px 13px; margin-bottom:14px; display:none;}
+  .auto-note.show{display:block;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>📝 RPP <span class="gold">Prompter</span></h1>
+  <p>Generator prompt perangkat pembelajaran — RPP, Modul Ajar, RPPH &amp; RPL lintas jenjang</p>
+  <span class="badge">Isi formulir → Generate → Prompt siap ditempel ke AI favoritmu</span>
+</header>
+
+<main>
+  <!-- 1. IDENTITAS -->
+  <section class="card">
+    <div class="sec-head-row">
+      <h2><span class="num">1</span> Identitas</h2>
+      <button class="sample-link" id="btnSample" type="button">✨ isi contoh cepat</button>
+    </div>
+    <p class="desc">Identitas dasar dokumen. Pilihan jenjang &amp; mapel otomatis menyesuaikan istilah dokumen.</p>
+    <div class="auto-note" id="autoNote"></div>
+    <div class="grid2">
+      <div>
+        <label class="f" for="fNama">Nama guru</label>
+        <input type="text" id="fNama" placeholder="cth: Pak Gun">
+      </div>
+      <div>
+        <label class="f" for="fSatuan">Satuan pendidikan</label>
+        <input type="text" id="fSatuan" placeholder="cth: SMPN 1 Punggur">
+      </div>
+      <div>
+        <label class="f" for="fJenjang">Jenjang <span class="req">*</span></label>
+        <select id="fJenjang">
+          <option value="">— pilih jenjang —</option>
+          <option>TK/PAUD</option><option>SD</option><option>SMP</option><option>SMA</option><option>SMK</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fKelas">Kelas / Kelompok</label>
+        <select id="fKelas"><option value="">— pilih jenjang dulu —</option></select>
+      </div>
+      <div>
+        <label class="f" for="fFase">Fase</label>
+        <select id="fFase"><option value="">— pilih jenjang dulu —</option></select>
+      </div>
+      <div>
+        <label class="f" for="fMapel">Mata pelajaran <span class="req">*</span></label>
+        <input type="text" id="fMapel" list="dlMapel" placeholder="cth: Matematika">
+        <datalist id="dlMapel"></datalist>
+      </div>
+      <div>
+        <label class="f" for="fMateri">Materi pokok <span class="req">*</span></label>
+        <input type="text" id="fMateri" placeholder="cth: Bilangan Bulat">
+      </div>
+      <div id="rowTema" class="hidden">
+        <label class="f" for="fTemaPAUD">Tema / Subtema (khusus PAUD)</label>
+        <input type="text" id="fTemaPAUD" placeholder="cth: Diriku / Tubuhku">
+      </div>
+      <div id="rowBidang" class="hidden">
+        <label class="f" for="fBidangBK">Bidang layanan (khusus BK)</label>
+        <select id="fBidangBK">
+          <option>Pribadi</option><option>Sosial</option><option>Belajar</option><option>Karier</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fJml">Jumlah pertemuan</label>
+        <input type="number" id="fJml" min="1" max="12" value="3">
+      </div>
+      <div>
+        <label class="f" for="fWaktu">Alokasi waktu / pertemuan</label>
+        <input type="text" id="fWaktu" placeholder="cth: 2 × 40 menit">
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. JENIS DOKUMEN -->
+  <section class="card">
+    <h2><span class="num">2</span> Jenis Dokumen</h2>
+    <p class="desc">Pilih dokumen yang ingin dibuat. Otomatis disarankan sesuai jenjang &amp; mapel — tetap bisa diubah.</p>
+    <div class="opt-grid" id="jenisGrid"></div>
+  </section>
+
+  <!-- 3. ACUAN & ISI -->
+  <section class="card">
+    <h2><span class="num">3</span> Acuan &amp; Isi Inti</h2>
+    <p class="desc">Jangkar kurikulum yang wajib dipatuhi AI.</p>
+    <div>
+      <label class="f" for="fTP">Tujuan Pembelajaran (TP)</label>
+      <textarea id="fTP" placeholder="Tulis 1–4 tujuan pembelajaran, satu baris satu tujuan"></textarea>
+      <div class="hint">✏️ Tulis 1–4 tujuan pembelajaran, satu baris satu tujuan. <b>Pastikan diambil dari CP/ATP atau dari Panduan Mapel</b> — bukan karangan bebas.</div>
+    </div>
+    <div style="margin-top:14px">
+      <label class="f">Dimensi Profil Lulusan <span class="hint" style="display:inline;font-weight:400">(pilih yang diupayakan tercapai — boleh lebih dari satu)</span></label>
+      <div class="dd" id="ddDimensi">
+        <button type="button" class="dd-btn" id="ddBtn"><span>▾ Pilih dimensi…</span><span style="display:flex;gap:8px;align-items:center"><span id="ddCount"></span><span class="arr">▾</span></span></button>
+        <div class="dd-panel" id="ddPanel"></div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:14px">
+      <div>
+        <label class="f" for="fKompetensi">Kompetensi awal murid</label>
+        <textarea id="fKompetensi" placeholder="cth: murid sudah mengenal bilangan cacah (kosongkan = AI merumuskan)"></textarea>
+      </div>
+      <div>
+        <label class="f" for="fBermakna">Pengetahuan / pemahaman bermakna</label>
+        <textarea id="fBermakna" placeholder="cth: bilangan bulat ada di sekitar kita: suhu, utang, lantai gedung (kosongkan = AI merumuskan)"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. DESAIN PEMBELAJARAN -->
+  <section class="card">
+    <h2><span class="num">4</span> Desain Pembelajaran</h2>
+    <p class="desc">Model dan alur langkah yang dipakai AI saat menyusun dokumen.</p>
+    <div class="grid2">
+      <div>
+        <label class="f" for="fModel">Model / pendekatan</label>
+        <select id="fModel">
+          <option>Pembelajaran Mendalam</option>
+          <option>Problem Based Learning (PBL)</option>
+          <option>Project Based Learning (PjBL)</option>
+          <option>Discovery Learning</option>
+          <option>Inquiry Learning</option>
+          <option>Kooperatif</option>
+          <option>Kontekstual (CTL)</option>
+          <option>Pembelajaran Berbasis Bermain (PAUD)</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fOutput">Format keluaran dokumen</label>
+        <select id="fOutput">
+          <option>Teks rapi siap salin ke Word</option>
+          <option>HTML siap cetak</option>
+          <option>Keduanya (teks + HTML)</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <label class="f">Fase langkah pembelajaran</label>
+      <div class="opt-grid" id="faseGrid"></div>
+    </div>
+    <div style="margin-top:14px">
+      <label class="f">Prinsip pembelajaran (dicantumkan tiap fase langkah)</label>
+      <div class="checks">
+        <label class="chk"><input type="checkbox" id="pSadar" checked><span><b>Berkesadaran</b><small>Murid sadar tujuan &amp; proses belajarnya</small></span></label>
+        <label class="chk"><input type="checkbox" id="pMakna" checked><span><b>Bermakna</b><small>Terhubung dengan kehidupan nyata</small></span></label>
+        <label class="chk"><input type="checkbox" id="pGembira" checked><span><b>Menggembirakan</b><small>Suasana positif &amp; memotivasi</small></span></label>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. FITUR WAJIB -->
+  <section class="card">
+    <h2><span class="num">5</span> Fitur Wajib Dokumen</h2>
+    <p class="desc">Semua yang dicentang menjadi syarat mutlak di dalam prompt.</p>
+    <div class="checks">
+      <label class="chk"><input type="checkbox" id="kAsesAwal" checked>
+        <span><b>Asesmen awal + tindak lanjut</b><small>Diagnostik di awal tiap materi + rencana tindak lanjut per hasil</small></span></label>
+      <label class="chk"><input type="checkbox" id="kRubrik" checked>
+        <span><b>Rubrik asesmen formatif</b><small>Rubrik skor 1–4 untuk tiap aktivitas penilaian</small></span></label>
+      <label class="chk"><input type="checkbox" id="kLKPD" checked>
+        <span><b>Lembar aktivitas / LKPD</b><small>Lembar kerja siap pakai per pertemuan penting</small></span></label>
+      <label class="chk"><input type="checkbox" id="kMiskon" checked>
+        <span><b>Miskonsepsi umum + antisipasi</b><small>Kesalahan umum murid &amp; cara mengatasinya</small></span></label>
+      <label class="chk"><input type="checkbox" id="kDifer" checked>
+        <span><b>Diferensiasi</b><small>Penguatan &amp; pendampingan sesuai kesiapan murid</small></span></label>
+      <label class="chk"><input type="checkbox" id="kPR" checked>
+        <span><b>Pengayaan &amp; remedial</b><small>Program tindak lanjut hasil asesmen</small></span></label>
+      <label class="chk"><input type="checkbox" id="kNomor" checked>
+        <span><b>Penomoran restart per bagian</b><small>Setiap daftar bernomor mulai dari 1 di tiap bagian</small></span></label>
+      <label class="chk"><input type="checkbox" id="kRefleksi" checked>
+        <span><b>Refleksi murid &amp; guru</b><small>Pertanyaan refleksi di akhir tiap pertemuan</small></span></label>
+    </div>
+  </section>
+
+  <div class="center">
+    <button class="btn btn-primary gen-btn" id="btnGenerate" type="button">⚡ Generate Prompt</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <section class="card" id="outputCard">
+    <h2><span class="num">✓</span> Prompt Siap Pakai</h2>
+    <p class="desc">Tempel prompt ini ke AI mana pun untuk membuat dokumennya.</p>
+    <pre id="promptOut"></pre>
+    <div class="out-actions">
+      <button class="btn btn-navy btn-sm" id="btnCopy" type="button">📋 Salin Prompt</button>
+      <button class="btn btn-ghost btn-sm" id="btnSave" type="button">💾 Simpan ke Pustaka</button>
+      <button class="btn btn-ghost btn-sm" id="btnDownload" type="button">⬇️ Unduh .md</button>
+    </div>
+    <div class="ai-label">🚀 Kirim prompt ke AI pilihanmu <span class="hint" style="font-weight:400">(prompt otomatis tersalin, lalu situs AI terbuka di tab baru — tinggal tempel/Ctrl+V)</span></div>
+    <div class="ai-row" id="aiRow"></div>
+  </section>
+
+  <!-- PUSTAKA -->
+  <section class="card">
+    <div class="sec-head-row">
+      <h2><span class="num">📚</span> Pustaka Prompt Saya</h2>
+      <div>
+        <button class="btn btn-ghost btn-sm" id="btnExport" type="button">⬆️ Ekspor JSON</button>
+        <button class="btn btn-ghost btn-sm" id="btnImport" type="button">⬇️ Impor JSON</button>
+        <input type="file" id="fileImport" accept="application/json" style="display:none">
+      </div>
+    </div>
+    <p class="desc">Semua prompt tersimpan otomatis di perangkat ini — tetap ada walau aplikasi ditutup.</p>
+    <div id="libList"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="gold">📝 RPP Prompter</div>
+  <div style="margin-top:6px">@2026 GezyTech Prompter. Dikembangkan oleh PakGun</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============ DATA ============ */
+const JENJANG = {
+  "TK/PAUD": {fase:["Fondasi"], kelas:["Kelompok A","Kelompok B"],
+    mapel:["Nilai Agama & Budi Pekerti","Jati Diri","Dasar Literasi & STEAM","Motorik & Seni"]},
+  "SD": {fase:["A","B","C"], kelas:["1","2","3","4","5","6"],
+    mapel:["Matematika","IPAS","Bahasa Indonesia","PPKn","PAI","PJOK","Seni","Bahasa Inggris"]},
+  "SMP": {fase:["D"], kelas:["7","8","9"],
+    mapel:["Matematika","IPA","Bahasa Indonesia","Bahasa Inggris","IPS","PPKn","Informatika","PAI","PJOK","Seni","Prakarya","Bimbingan Konseling"]},
+  "SMA": {fase:["E","F"], kelas:["10","11","12"],
+    mapel:["Matematika","Fisika","Kimia","Biologi","Bahasa Indonesia","Bahasa Inggris","Sejarah","PPKn","Informatika","Ekonomi","Sosiologi","Geografi","Bimbingan Konseling"]},
+  "SMK": {fase:["E","F"], kelas:["10","11","12"],
+    mapel:["Matematika","Bahasa Indonesia","Bahasa Inggris","PPKn","Informatika","Produktif / Keahlian","Kewirausahaan","PAI","Bimbingan Konseling"]}
+};
+
+const JENIS = [
+  {id:"lengkap", ikon:"📋", nama:"RPP Lengkap",
+   desk:"Struktur 4 bagian: identitas, identifikasi, kerangka PM, langkah detail per pertemuan"},
+  {id:"satulembar", ikon:"📄", nama:"RPP 1 Lembar",
+   desk:"Format 2 kolom: kolom sempit identitas, kolom lebar identifikasi + langkah"},
+  {id:"modul", ikon:"📚", nama:"Modul Ajar",
+   desk:"Format resmi: informasi umum, komponen inti, lampiran"},
+  {id:"rpph", ikon:"🧸", nama:"RPPH (PAUD)",
+   desk:"Rencana harian PAUD: tema, sentra, pijakan main, rencana penilaian"},
+  {id:"rplbk", ikon:"🤝", nama:"RPL BK",
+   desk:"Rencana layanan BK: bidang & jenis layanan, teknik, penilaian layanan"}
+];
+
+const FASE_LANGKAH = [
+  {id:"mam", nama:"Memahami – Mengaplikasi – Merefleksi",
+   desk:"Fase resmi contoh Panduan Mapel (tiap fase berlabel prinsip pembelajaran)"},
+  {id:"pip", nama:"Pendahuluan – Inti – Penutup",
+   desk:"Gaya klasik yang rinci langkah demi langkah"}
+];
+
+const DIMENSI = [
+  {nama:"Keimanan dan ketakwaan terhadap Tuhan YME",
+   aksi:"sisipkan pembiasaan syukur/doa dan keteladanan yang wajar, tanpa menggurui lintas keyakinan"},
+  {nama:"Kewargaan",
+   aksi:"selipkan nilai gotong royong, aturan bersama, dan kepedulian lingkungan/masyarakat dalam kegiatan"},
+  {nama:"Penalaran kritis",
+   aksi:"cantumkan aktivitas HOTS (menganalisis–mengevaluasi) dan pertanyaan 'mengapa/bagaimana' di langkah inti"},
+  {nama:"Kreativitas",
+   aksi:"sediakan tugas terbuka (membuat contoh sendiri/merancang solusi) dalam kegiatan atau LKPD"},
+  {nama:"Kolaborasi",
+   aksi:"cantumkan minimal 1 aktivitas berpasangan/kelompok (diskusi, bagi tugas) dalam langkah inti"},
+  {nama:"Kemandirian",
+   aksi:"cantumkan aktivitas mandiri, ceklis kesiapan, dan pembiasaan tanggung jawab"},
+  {nama:"Kesehatan",
+   aksi:"sisipkan jeda gerak/istirahat dan konteks pola hidup sehat bila relevan dengan materi"},
+  {nama:"Komunikasi",
+   aksi:"cantumkan aktivitas menyajikan hasil (presentasi/menceritakan) dengan rubrik komunikasi sederhana"}
+];
+
+const AI_LIST = [
+  {nama:"Muse", url:"https://muse.ai/"},
+  {nama:"ChatGPT", url:"https://chatgpt.com/"},
+  {nama:"Claude", url:"https://claude.ai/"},
+  {nama:"Gemini", url:"https://gemini.google.com/"},
+  {nama:"DeepSeek", url:"https://chat.deepseek.com/"},
+  {nama:"Grok", url:"https://grok.com/"},
+  {nama:"Copilot", url:"https://copilot.microsoft.com/"},
+  {nama:"Qwen", url:"https://chat.qwen.ai/"},
+  {nama:"Le Chat", url:"https://chat.mistral.ai/"},
+  {nama:"Perplexity", url:"https://www.perplexity.ai/"}
+];
+
+const LS_KEY = "rppPrompter.library.v1";
+</script>
+
+<script>
+"use strict";
+/* ============ HELPERS ============ */
+const $ = id => document.getElementById(id);
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+function esc(s){ return String(s==null?"":s); }
+const isBK = m => /bimbingan konseling|\bbk\b|konseling/i.test(m||"");
+
+/* ============ RENDER ============ */
+function renderJenis(){
+  $("jenisGrid").innerHTML = JENIS.map((j,i)=>
+    '<label class="opt"><input type="radio" name="jenis" value="'+j.id+'"'+(i===0?" checked":"")+'>'+
+    '<span class="box"><span class="t">'+j.ikon+" "+j.nama+'</span><span class="d" style="display:block">'+j.desk+'</span></span></label>'
+  ).join("");
+}
+function renderFase(){
+  $("faseGrid").innerHTML = FASE_LANGKAH.map((f,i)=>
+    '<label class="opt"><input type="radio" name="fase" value="'+f.id+'"'+(i===0?" checked":"")+'>'+
+    '<span class="box"><span class="t">'+f.nama+'</span><span class="d" style="display:block">'+f.desk+'</span></span></label>'
+  ).join("");
+}
+function renderDimensi(){
+  $("ddPanel").innerHTML = DIMENSI.map((dm,i)=>
+    '<label class="dd-item"><input type="checkbox" value="'+i+'">'+
+    '<span><b>'+dm.nama+'</b><small>'+dm.aksi+'</small></span></label>'
+  ).join("");
+  $("ddPanel").querySelectorAll("input").forEach(c=>c.addEventListener("change", updateDdCount));
+}
+function updateDdCount(){
+  const n = document.querySelectorAll("#ddPanel input:checked").length;
+  $("ddCount").textContent = n ? n + " dipilih" : "";
+}
+function initDd(){
+  $("ddBtn").addEventListener("click", e=>{ e.stopPropagation(); $("ddDimensi").classList.toggle("open"); });
+  document.addEventListener("click", e=>{
+    if(!$("ddDimensi").contains(e.target)) $("ddDimensi").classList.remove("open");
+  });
+}
+function getDimensi(){
+  return [...document.querySelectorAll("#ddPanel input:checked")].map(c=>+c.value);
+}
+function renderAIButtons(){
+  $("aiRow").innerHTML = AI_LIST.map((a,i)=>
+    '<button class="btn btn-ghost btn-sm" type="button" data-ai="'+i+'">🚀 '+a.nama+'</button>'
+  ).join("");
+  $("aiRow").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    kirimKeAI(AI_LIST[+b.getAttribute("data-ai")]);
+  }));
+}
+function kirimKeAI(ai){
+  if(!lastPrompt){ toast("Generate dulu promptnya"); return; }
+  window.open(ai.url, "_blank", "noopener");
+  doCopy();
+  toast("Membuka " + ai.nama + " — prompt tersalin, tinggal tempel 📋");
+}
+
+/* ============ OTOMATISASI ISTILAH ============ */
+function autoNote(msg){
+  const n = $("autoNote");
+  if(msg){ n.innerHTML = msg; n.classList.add("show"); } else { n.classList.remove("show"); }
+}
+function setJenis(id){
+  const r = document.querySelector('input[name=jenis][value='+id+']');
+  if(r) r.checked = true;
+}
+function onJenjang(){
+  const j = $("fJenjang").value, cfg = JENJANG[j];
+  const kSel = $("fKelas"), fSel = $("fFase");
+  if(!cfg){ kSel.innerHTML='<option value="">— pilih jenjang dulu —</option>'; fSel.innerHTML='<option value="">— pilih jenjang dulu —</option>'; return; }
+  kSel.innerHTML = cfg.kelas.map(k=>'<option>'+k+'</option>').join("");
+  fSel.innerHTML = cfg.fase.map(f=>'<option>'+f+'</option>').join("");
+  $("dlMapel").innerHTML = cfg.mapel.map(m=>'<option value="'+m+'">').join("");
+  const paud = j === "TK/PAUD";
+  $("rowTema").classList.toggle("hidden", !paud);
+  if(paud){ setJenis("rpph"); $("fModel").value = "Pembelajaran Berbasis Bermain (PAUD)"; }
+  autoCheck();
+}
+function autoCheck(){
+  const j = $("fJenjang").value, m = $("fMapel").value.trim();
+  const paud = j === "TK/PAUD", bk = isBK(m);
+  $("rowBidang").classList.toggle("hidden", !bk);
+  if(paud && bk){
+    autoNote("ℹ️ Terdeteksi <b>PAUD + BK</b> — dokumen diset ke <b>RPPH</b> dengan sentuhan layanan BK. Ubah manual bila perlu.");
+  } else if(paud){
+    autoNote("ℹ️ Jenjang <b>TK/PAUD</b> terdeteksi — jenis dokumen otomatis diset ke <b>RPPH</b> (bukan RPP). Silakan ubah bila perlu.");
+  } else if(bk){
+    autoNote("ℹ️ Mapel <b>Bimbingan Konseling</b> terdeteksi — jenis dokumen otomatis diset ke <b>RPL BK</b> (Rencana Pelaksanaan Layanan). Silakan ubah bila perlu.");
+  } else autoNote(null);
+  if(bk && !paud) setJenis("rplbk");
+}
+
+/* ============ CONTOH ============ */
+function isiContoh(){
+  $("fNama").value = "Pak Gun"; $("fSatuan").value = "SMPN 1 Punggur";
+  $("fJenjang").value = "SMP"; onJenjang();
+  $("fKelas").value = "7"; $("fFase").value = "D";
+  $("fMapel").value = "Matematika"; autoCheck();
+  $("fMateri").value = "Bilangan Bulat";
+  $("fJml").value = 7; $("fWaktu").value = "2 × 40 menit";
+  $("fTP").value = "membaca dan menulis bilangan bulat\nmembandingkan bilangan bulat\nmenentukan hasil operasi hitung bilangan bulat\nmemecahkan masalah sehari-hari yang melibatkan bilangan bulat";
+  setJenis("lengkap");
+  const cb = document.querySelectorAll("#ddPanel input");
+  [2,4,7].forEach(i=>{ cb[i].checked = true; }); updateDdCount();
+  toast("Contoh terisi — silakan ubah lalu Generate");
+}
+
+/* ============ FORM ============ */
+function getForm(){
+  const val = id => $(id).value.trim();
+  const jenis = (document.querySelector('input[name=jenis]:checked')||{}).value || "lengkap";
+  const fase = (document.querySelector('input[name=fase]:checked')||{}).value || "mam";
+  const prinsip = [];
+  if($("pSadar").checked) prinsip.push("Berkesadaran");
+  if($("pMakna").checked) prinsip.push("Bermakna");
+  if($("pGembira").checked) prinsip.push("Menggembirakan");
+  return {
+    nama: val("fNama"), satuan: val("fSatuan") || "[Nama Satuan Pendidikan]",
+    jenjang: val("fJenjang"), kelas: val("fKelas"), fase: val("fFase"),
+    mapel: val("fMapel"), materi: val("fMateri"),
+    temaPAUD: val("fTemaPAUD"), bidangBK: val("fBidangBK"),
+    jml: Math.max(1, Math.min(12, +val("fJml") || 1)),
+    waktu: val("fWaktu") || "disesuaikan",
+    jenis, fase, prinsip,
+    model: val("fModel"), output: val("fOutput"),
+    tp: val("fTP"), dimensi: getDimensi(),
+    kompetensi: val("fKompetensi"), bermakna: val("fBermakna"),
+    kAsesAwal: $("kAsesAwal").checked, kRubrik: $("kRubrik").checked,
+    kLKPD: $("kLKPD").checked, kMiskon: $("kMiskon").checked,
+    kDifer: $("kDifer").checked, kPR: $("kPR").checked,
+    kNomor: $("kNomor").checked, kRefleksi: $("kRefleksi").checked
+  };
+}
+function validate(d){
+  let ok = true;
+  [["fJenjang",d.jenjang],["fMapel",d.mapel],["fMateri",d.materi]].forEach(([id,v])=>{
+    $(id).classList.toggle("invalid", !v); if(!v) ok = false;
+  });
+  if(!ok) toast("Lengkapi dulu: jenjang, mata pelajaran, dan materi pokok");
+  return ok;
+}
+
+/* ============ STRUKTUR PER JENIS DOKUMEN ============ */
+function strukturDokumen(d){
+  const L = [];
+  const jenisNama = JENIS.find(j=>j.id===d.jenis).nama;
+  const faseLbl = d.fase === "mam" ? "Memahami → Mengaplikasi → Merefleksi" : "Pendahuluan → Inti → Penutup";
+  const prinsipLbl = d.prinsip.length ? d.prinsip.join(", ") : "Berkesadaran, Bermakna, Menggembirakan";
+  const langkahFase = d.fase === "mam"
+    ? ["MEMAHAMI (beri label Prinsip: "+prinsipLbl+")", "MENGAPLIKASI (beri label Prinsip: "+prinsipLbl+")", "MEREFLEKSI (beri label Prinsip: "+prinsipLbl+")"]
+    : ["PENDAHULUAN", "INTI", "PENUTUP"];
+  const idLine = d.jenjang==="TK/PAUD"
+    ? "Satuan PAUD: "+d.satuan+" | Semester/Bulan/Minggu: [isi] | Hari/Tanggal: [isi] | Tema/Subtema: "+(d.temaPAUD||"[isi]")+" | Kelompok: "+d.kelas
+    : (isBK(d.mapel)
+      ? "Satuan pendidikan: "+d.satuan+" | Bidang layanan: "+d.bidangBK+" | Kelas: "+d.kelas+" | Semester: [isi]"
+      : "Satuan pendidikan: "+d.satuan+" | Kelas/Fase: "+d.kelas+" / "+d.fase+" | Mata pelajaran: "+d.mapel+" | Materi: "+d.materi);
+
+  L.push("Jenis dokumen: " + jenisNama + ".");
+  L.push("");
+
+  if(d.jenis === "lengkap"){
+    L.push("Susun dokumen dengan TEPAT 4 bagian berikut (jangan ditambah/dikurangi):");
+    L.push("");
+    L.push("BAGIAN 1 — IDENTITAS");
+    L.push(idLine + " | Alokasi waktu: "+d.jml+" pertemuan × "+d.waktu+" | Model: "+d.model);
+    L.push("");
+    L.push("BAGIAN 2 — IDENTIFIKASI");
+    L.push("a. Karakteristik murid: [AI merumuskan sesuai jenjang "+d.jenjang+"]");
+    L.push("b. Karakteristik materi: uraian materi "+d.materi+" + miskonsepsi umum murid beserta cara mengantisipasinya");
+    L.push("c. Tujuan pembelajaran (1–4 butir, dari CP/ATP/Panduan Mapel — jangan diubah maknanya)");
+    L.push("");
+    L.push("BAGIAN 3 — KERANGKA PEMBELAJARAN MENDALAM");
+    L.push("- Dimensi Profil Lulusan terpilih (lihat Bagian C) — tulis cara mewujudkannya");
+    L.push("- Praktik pedagogis: "+d.model);
+    L.push("- Lingkungan pembelajaran (budaya belajar & ruang fisik)");
+    L.push("- Pemanfaatan digital");
+    L.push("- Kemitraan pembelajaran");
+    L.push("- Pengalaman belajar & prinsip pembelajaran: "+prinsipLbl);
+    L.push("");
+    L.push("BAGIAN 4 — LANGKAH PEMBELAJARAN (per pertemuan, "+d.jml+" pertemuan)");
+    for(let p=1;p<=d.jml;p++){
+      L.push("");
+      L.push("Pertemuan "+p+" ("+d.waktu+") — fase: "+faseLbl);
+      langkahFase.forEach(f=>L.push("  • "+f+": tulis langkah rinci langkah-demi-langkah (guru melakukan apa, murid melakukan apa) + alokasi menit tiap langkah."));
+    }
+    L.push("");
+    L.push("ATURAN PENOMORAN: setiap daftar bernomor di seluruh dokumen SELALU mulai dari angka 1 di tiap bagian (jangan melanjutkan nomor dari bagian sebelumnya).");
+  }
+  else if(d.jenis === "satulembar"){
+    L.push("Susun dalam format TABEL 2 KOLOM (siap salin ke Word):");
+    L.push("- Kolom SEMPIT (kiri, ±30%): identitas ("+idLine+"), alokasi "+d.jml+" × "+d.waktu+", TP ringkas (1–4 butir), asesmen ringkas.");
+    L.push("- Kolom LEBAR (kanan, ±70%): identifikasi singkat (karakteristik murid & materi + miskonsepsi) dan LANGKAH PEMBELAJARAN per pertemuan ("+d.jml+" pertemuan) dengan fase "+faseLbl+", rinci langkah-demi-langkah + menit.");
+    L.push("- Di bawah tabel: rubrik asesmen formatif singkat + tindak lanjut.");
+    L.push("ATURAN PENOMORAN: setiap daftar bernomor mulai dari 1 di tiap sel/bagian.");
+  }
+  else if(d.jenis === "modul"){
+    L.push("Susun MODUL AJAR dengan format resmi 3 komponen:");
+    L.push("");
+    L.push("A. INFORMASI UMUM");
+    L.push(idLine+" | Alokasi: "+d.jml+" × "+d.waktu+" | Kompetensi awal: "+(d.kompetensi||"[AI merumuskan]")+" | DPL terpilih | Sarana-prasarana | Target murid | Model: "+d.model);
+    L.push("");
+    L.push("B. KOMPONEN INTI");
+    L.push("- Tujuan pembelajaran (1–4 butir, dari CP/ATP/Panduan Mapel)");
+    L.push("- Pemahaman bermakna: "+(d.bermakna||"[AI merumuskan]"));
+    L.push("- Pertanyaan pemantik (3–5 pertanyaan terbuka)");
+    L.push("- Kegiatan pembelajaran per pertemuan ("+d.jml+" pertemuan, fase "+faseLbl+"): rinci + menit");
+    L.push("- Asesmen (awal + formatif + sumatif) beserta rubrik");
+    L.push("- Pengayaan & remedial");
+    L.push("- Refleksi murid dan guru");
+    L.push("");
+    L.push("C. LAMPIRAN");
+    L.push("LKPD/lembar aktivitas, bahan bacaan murid, instrumen asesmen + kunci, glosarium istilah.");
+  }
+  else if(d.jenis === "rpph"){
+    L.push("Susun RPPH (Rencana Pelaksanaan Pembelajaran Harian) PAUD — BUKAN format RPP sekolah. Bahasa hangat untuk guru PAUD.");
+    L.push("");
+    L.push("1. IDENTITAS PROGRAM — "+idLine);
+    L.push("2. MATERI — diambil dari RPPM, sejalan dengan tujuan; bedakan materi sikap (pembiasaan) dan pengetahuan/keterampilan");
+    L.push("3. ALAT DAN BAHAN — konkret, aman, menarik minat anak");
+    L.push("4. KEGIATAN PEMBUKAAN — membangun minat & kesiapan bermain, aturan main, pembiasaan");
+    L.push("5. KEGIATAN INTI — pendekatan saintifik ala PAUD (mengamati, menanya, mengumpulkan informasi, menalar, mengomunikasikan) lewat BERMAIN; gunakan pijakan: sebelum main, saat main, setelah main; model: "+(d.model==="Pembelajaran Mendalam"?"sentra/kelompok":"[sesuaikan]"));
+    L.push("6. KEGIATAN PENUTUP —回顾? tidak — gunakan: recalling, pesan moral, doa penutup");
+    L.push("7. RENCANA PENILAIAN — observasi & catatan anekdot perkembangan anak (bukan tes tulis)");
+    L.push("");
+    L.push("ATURAN KHUSUS PAUD: kalimat pendek & hangat; tanpa soal pilihan ganda/uraian; semua aktivitas berupa bermain; libatkan orang tua bila relevan.");
+  }
+  else if(d.jenis === "rplbk"){
+    L.push("Susun RPL (Rencana Pelaksanaan Layanan) BIMBINGAN KONSELING — BUKAN format RPP. Gunakan istilah LAYANAN, bukan pembelajaran.");
+    L.push("");
+    L.push("1. IDENTITAS LAYANAN — "+idLine);
+    L.push("2. BIDANG & JENIS LAYANAN — bidang: "+d.bidangBK+"; jenis: [layanan dasar/peminatan/perencanaan individual/responsif — AI memilihkan yang sesuai]");
+    L.push("3. TUJUAN LAYANAN — 1–3 tujuan (dari hasil need assessment/asesmen kebutuhan)");
+    L.push("4. MATERI LAYANAN — topik: "+d.materi);
+    L.push("5. METODE & TEKNIK — [AI memilihkan: diskusi, sosiodrama, simulasi, curah pendapat, dsb.]");
+    L.push("6. MEDIA & SUMBER — [AI menyesuaikan]");
+    L.push("7. LANGKAH LAYANAN — tahap: pembuka, inti (eksplorasi–identifikasi–alternatif–komitmen), penutup; rinci + menit; alokasi "+d.jml+" pertemuan × "+d.waktu);
+    L.push("8. PENILAIAN HASIL LAYANAN — Laiseg (penilaian segera), Laijapen (jangka pendek), Laijapang (jangka panjang)");
+    L.push("9. TINDAK LANJUT — rencana layanan lanjutan / alih tangan bila diperlukan");
+  }
+  return L;
+}
+
+/* ============ BANGUN PROMPT ============ */
+function buildPrompt(d){
+  const jenisNama = JENIS.find(j=>j.id===d.jenis).nama;
+  const L = [];
+  L.push("🎯 PROMPT PEMBUAT " + jenisNama.toUpperCase());
+  L.push(d.mapel + " • " + d.materi + " • " + d.jenjang + (d.kelas ? " Kelas " + d.kelas : ""));
+  L.push("");
+  L.push("Tempel seluruh prompt ini ke AI. Semua konfigurasi sudah terisi — AI tinggal menyusun dokumennya.");
+  L.push("");
+  L.push("─── A. KONFIGURASI ───");
+  L.push("Jenis dokumen     : " + jenisNama);
+  L.push("Satuan pendidikan : " + d.satuan);
+  if(d.nama) L.push("Disusun oleh       : " + d.nama);
+  L.push("Jenjang/Kelas/Fase: " + d.jenjang + (d.kelas ? " / " + d.kelas : "") + (d.fase ? " / Fase " + d.fase : ""));
+  L.push("Mata pelajaran    : " + d.mapel);
+  L.push("Materi pokok      : " + d.materi);
+  if(d.jenjang==="TK/PAUD" && d.temaPAUD) L.push("Tema/Subtema      : " + d.temaPAUD);
+  if(isBK(d.mapel)) L.push("Bidang layanan    : " + d.bidangBK);
+  L.push("Alokasi           : " + d.jml + " pertemuan × " + d.waktu);
+  L.push("Model             : " + d.model);
+  L.push("Fase langkah      : " + (d.fase==="mam" ? "Memahami – Mengaplikasi – Merefleksi" : "Pendahuluan – Inti – Penutup"));
+  L.push("Format keluaran   : " + d.output);
+  L.push("");
+  L.push("─── B. JANGKAR REGULASI (WAJIB DIPATUHI, JANGAN DILANGGAR) ───");
+  L.push("1. Panduan Pembelajaran dan Asesmen (Kemendikdasmen).");
+  L.push("2. Panduan Mata Pelajaran " + d.mapel + " (BSKAP Kemendikdasmen).");
+  L.push("3. Permendikdasmen Nomor 1 Tahun 2026 tentang Standar Proses.");
+  L.push("4. Pedoman asesmen Kemendikdasmen (asesmen awal/formatif/sumatif + tindak lanjut).");
+  L.push("5. Alur kerja resmi: Analisis CP → Susun TP + ATP → Rencanakan Pembelajaran + Asesmen.");
+  L.push("Jika ada konflik antara kebiasaan umum dan regulasi di atas, MENANGKAN regulasi.");
+  L.push("");
+  L.push("─── C. DIMENSI PROFIL LULUSAN ───");
+  if(d.dimensi.length){
+    d.dimensi.forEach(i=>{ const dm = DIMENSI[i]; L.push("• " + dm.nama + " → " + dm.aksi + "."); });
+    L.push("Setiap dimensi di atas harus TAMPAK dalam kegiatan/rubrik dokumen (bukan tempelan label).");
+  } else {
+    L.push("[AI memilihkan dimensi yang paling relevan, lalu mewujudkannya dalam kegiatan/rubrik.]");
+  }
+  L.push("Tujuan Pembelajaran (1–4 butir, diambil dari CP/ATP atau Panduan Mapel — JANGAN diubah maknanya):");
+  (d.tp ? d.tp.split("\n").filter(x=>x.trim()) : ["[AI merumuskan 1–4 TP dari CP/ATP atau Panduan Mapel]"]).forEach(t=>L.push("  - " + t.trim()));
+  if(d.kompetensi) L.push("Kompetensi awal: " + d.kompetensi);
+  if(d.bermakna) L.push("Pemahaman bermakna: " + d.bermakna);
+  L.push("");
+  L.push("─── D. STRUKTUR DOKUMEN ───");
+  strukturDokumen(d).forEach(s=>L.push(s));
+  L.push("");
+  L.push("─── E. FITUR WAJIB ───");
+  if(d.kAsesAwal) L.push("• Asesmen awal di tiap awal materi + RENCANA TINDAK LANJUT per kategori hasil (siap/belum siap).");
+  if(d.kRubrik) L.push("• Rubrik asesmen formatif (skor 1–4 dengan deskriptor jelas) untuk setiap aktivitas yang dinilai.");
+  if(d.kLKPD) L.push("• Lembar aktivitas/LKPD siap pakai (tujuan, langkah, ruang jawaban).");
+  if(d.kMiskon) L.push("• Cantumkan MISKONSEPSI UMUM murid pada materi ini + cara mengantisipasinya dalam pembelajaran.");
+  if(d.kDifer) L.push("• Diferensiasi: kegiatan penguatan untuk yang siap + pendampingan untuk yang belum siap.");
+  if(d.kPR) L.push("• Program pengayaan & remedial pasca asesmen.");
+  if(d.kNomor) L.push("• Penomoran: setiap daftar bernomor SELALU mulai dari 1 di tiap bagian.");
+  if(d.kRefleksi) L.push("• Refleksi murid (4 pertanyaan) & refleksi guru di akhir tiap pertemuan.");
+  L.push("• Bahasa Indonesia baku, kalimat operasional (jelas siapa melakukan apa).");
+  L.push("• Prinsip pembelajaran (" + (d.prinsip.join(", ")||"Berkesadaran, Bermakna, Menggembirakan") + ") dicantumkan pada tiap fase langkah.");
+  L.push("");
+  L.push("─── F. CEKLIS SEBELUM DISERAHKAN ───");
+  L.push("[ ] Struktur dokumen TEPAT mengikuti Bagian D (tidak ada bagian yang hilang/tertukar)");
+  L.push("[ ] TP 1–4 butir, maknanya tidak diubah dari sumber");
+  L.push("[ ] Setiap pertemuan punya langkah rinci + alokasi menit");
+  L.push("[ ] Asesmen awal + tindak lanjut, rubrik formatif, dan instrumen sumatif lengkap");
+  L.push("[ ] Istilah sesuai jenjang/mapel (" + (d.jenjang==="TK/PAUD" ? "RPPH: tema, sentra, pijakan, observasi" : isBK(d.mapel) ? "RPL: layanan, Laiseg/Laijapen/Laijapang" : "RPP/Modul Ajar standar") + ")");
+  L.push("[ ] Penomoran dimulai dari 1 di setiap bagian");
+  L.push("[ ] Tidak ada konten di luar materi & tujuan di atas");
+  L.push("");
+  L.push("🎬 HASIL AKHIR YANG DIHARAPKAN");
+  L.push("Guru yang menerima dokumen ini harus bisa langsung mengajar tanpa menebak-nebak:");
+  L.push("\"Saya tahu persis apa yang dilakukan di tiap menit, bagaimana menilai, dan apa tindak lanjutnya.\"");
+  return L.join("\n");
+}
+
+/* ============ GENERATE & OUTPUT ============ */
+let lastPrompt = "";
+function doGenerate(){
+  const d = getForm();
+  if(!validate(d)) return;
+  lastPrompt = buildPrompt(d);
+  $("promptOut").textContent = lastPrompt;
+  $("outputCard").classList.add("show");
+  if($("outputCard").scrollIntoView) $("outputCard").scrollIntoView({behavior:"smooth", block:"start"});
+  toast("Prompt berhasil dibuat ⚡");
+}
+function doCopy(text){
+  const t = text || lastPrompt;
+  if(!t){ toast("Generate dulu promptnya"); return false; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>toast("Prompt tersalin 📋")).catch(()=>fallbackCopy(t));
+  } else fallbackCopy(t);
+  return true;
+}
+function fallbackCopy(t){
+  const ta = document.createElement("textarea");
+  ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toast("Prompt tersalin 📋"); }
+  catch(e){ toast("Gagal menyalin — blok manual dari pratinjau"); }
+  document.body.removeChild(ta);
+}
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60) || "prompt-rpp"; }
+function doDownload(){
+  if(!lastPrompt){ toast("Generate dulu promptnya"); return; }
+  const d = getForm();
+  const blob = new Blob([lastPrompt], {type:"text/markdown;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = slug(d.jenis + "-" + d.materi) + ".md";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("File .md diunduh ⬇️");
+}
+
+/* ============ PUSTAKA ============ */
+function loadLib(){
+  try{ const raw = localStorage.getItem(LS_KEY); const arr = raw ? JSON.parse(raw) : []; return Array.isArray(arr) ? arr : []; }
+  catch(e){ return []; }
+}
+function saveLib(arr){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(arr)); return true; }
+  catch(e){ toast("Penyimpanan penuh / tidak tersedia"); return false; }
+}
+function doSave(){
+  if(!lastPrompt){ toast("Generate dulu promptnya"); return; }
+  const d = getForm();
+  const lib = loadLib();
+  lib.unshift({
+    id: "p" + Date.now().toString(36),
+    judul: JENIS.find(j=>j.id===d.jenis).nama + " — " + d.materi,
+    jenjang: d.jenjang, mapel: d.mapel, materi: d.materi,
+    ts: Date.now(), prompt: lastPrompt
+  });
+  if(saveLib(lib)){ renderLib(); toast("Tersimpan di Pustaka 💾"); }
+}
+function doDelete(id){
+  if(!confirm("Hapus prompt ini dari Pustaka?")) return;
+  saveLib(loadLib().filter(x=>x.id!==id)); renderLib(); toast("Dihapus 🗑️");
+}
+function viewItem(id){
+  const it = loadLib().find(x=>x.id===id); if(!it) return;
+  lastPrompt = it.prompt;
+  $("promptOut").textContent = lastPrompt;
+  $("outputCard").classList.add("show");
+  if($("outputCard").scrollIntoView) $("outputCard").scrollIntoView({behavior:"smooth", block:"start"});
+}
+function downloadItem(id){
+  const it = loadLib().find(x=>x.id===id); if(!it) return;
+  const blob = new Blob([it.prompt], {type:"text/markdown;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = slug(it.judul) + ".md";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function renderLib(){
+  const lib = loadLib(), wrap = $("libList");
+  if(!lib.length){
+    wrap.innerHTML = '<div class="empty-lib">📭 Belum ada prompt tersimpan.<br>Generate prompt lalu tekan <b>💾 Simpan ke Pustaka</b>.</div>';
+    return;
+  }
+  wrap.innerHTML = lib.map(it=>{
+    const tgl = new Date(it.ts).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"});
+    return '<div class="lib-item"><div class="meta"><div class="jt">'+esc(it.judul)+'</div>'+
+      '<div class="js">'+esc(it.jenjang||"")+' • '+esc(it.mapel||"")+' • '+esc(it.materi||"")+' • '+tgl+'</div></div>'+
+      '<div class="acts">'+
+      '<button class="btn btn-navy btn-sm" data-act="view" data-id="'+it.id+'">👁️ Lihat</button>'+
+      '<button class="btn btn-ghost btn-sm" data-act="copy" data-id="'+it.id+'">📋 Salin</button>'+
+      '<button class="btn btn-ghost btn-sm" data-act="dl" data-id="'+it.id+'">⬇️</button>'+
+      '<button class="btn btn-danger btn-sm" data-act="del" data-id="'+it.id+'">🗑️</button>'+
+      '</div></div>';
+  }).join("");
+  wrap.querySelectorAll("button[data-act]").forEach(b=>b.addEventListener("click",()=>{
+    const id = b.getAttribute("data-id"), act = b.getAttribute("data-act");
+    if(act==="view") viewItem(id);
+    else if(act==="copy"){ const it = loadLib().find(x=>x.id===id); if(it) doCopy(it.prompt); }
+    else if(act==="dl") downloadItem(id);
+    else if(act==="del") doDelete(id);
+  }));
+}
+function doExport(){
+  const lib = loadLib();
+  if(!lib.length){ toast("Pustaka masih kosong"); return; }
+  const blob = new Blob([JSON.stringify(lib,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "pustaka-rpp-prompter.json";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("Pustaka diekspor ⬆️");
+}
+function doImport(file){
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const arr = JSON.parse(r.result);
+      if(!Array.isArray(arr)) throw new Error("format salah");
+      const cur = loadLib(), ids = new Set(cur.map(x=>x.id));
+      let n = 0;
+      arr.forEach(it=>{ if(it && it.prompt && !ids.has(it.id)){ cur.push(it); n++; } });
+      cur.sort((a,b)=>(b.ts||0)-(a.ts||0));
+      if(saveLib(cur)){ renderLib(); toast(n + " prompt diimpor ⬇️"); }
+    }catch(e){ toast("File tidak valid"); }
+  };
+  r.readAsText(file);
+}
+
+/* ============ INIT ============ */
+document.addEventListener("DOMContentLoaded", ()=>{
+  renderJenis(); renderFase(); renderDimensi(); initDd(); renderAIButtons(); renderLib();
+  $("fJenjang").addEventListener("change", onJenjang);
+  $("fMapel").addEventListener("input", autoCheck);
+  $("btnSample").addEventListener("click", isiContoh);
+  $("btnGenerate").addEventListener("click", doGenerate);
+  $("btnCopy").addEventListener("click", ()=>doCopy());
+  $("btnSave").addEventListener("click", doSave);
+  $("btnDownload").addEventListener("click", doDownload);
+  $("btnExport").addEventListener("click", doExport);
+  $("btnImport").addEventListener("click", ()=>$("fileImport").click());
+  $("fileImport").addEventListener("change", e=>{ if(e.target.files[0]) doImport(e.target.files[0]); e.target.value=""; });
+});
+</script>
+</body>
+</html>
+
