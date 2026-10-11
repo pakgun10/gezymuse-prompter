@@ -57,6 +57,9 @@
   .chk small{display:block; color:var(--muted); font-size:.78rem;}
   .btn{display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; font-family:inherit;
     font-weight:700; border-radius:12px; padding:13px 26px; font-size:1rem; transition:.15s;}
+  .waktu-row{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
+  .waktu-row .wl{flex:none; width:104px; font-size:.85rem; font-weight:600; color:var(--navy);}
+  .waktu-row .wVal{flex:1;}
   .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--navy); box-shadow:0 4px 14px rgba(245,179,1,.4);}
   .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(245,179,1,.5);}
   .btn-navy{background:var(--navy); color:#fff;}
@@ -184,8 +187,9 @@
         <input type="number" id="fJml" min="1" max="12" value="3">
       </div>
       <div>
-        <label class="f" for="fWaktu">Alokasi waktu / pertemuan</label>
-        <input type="text" id="fWaktu" placeholder="cth: 2 × 40 menit">
+        <label class="f">Alokasi waktu per pertemuan</label>
+        <div id="waktuList"></div>
+        <div class="hint">Otomatis mengikuti jumlah pertemuan — ubah tiap baris bila alokasinya beda (cth: P1 = 3 × 40 menit, P2 = 1 × 40 menit).</div>
       </div>
     </div>
   </section>
@@ -495,6 +499,38 @@ function autoCheck(){
   if(bk && !paud) setJenis("rplbk");
 }
 
+/* ============ ALOKASI PER PERTEMUAN ============ */
+function renderWaktu(keep){
+  const n = Math.max(1, Math.min(12, +$("fJml").value || 1));
+  const cur = keep ? [...document.querySelectorAll("#waktuList .wVal")].map(i=>i.value) : [];
+  const wrap = $("waktuList");
+  wrap.innerHTML = "";
+  for(let i=0;i<n;i++){
+    const row = document.createElement("div");
+    row.className = "waktu-row";
+    row.innerHTML = '<span class="wl">Pertemuan '+(i+1)+'</span>'+
+      '<input type="text" class="wVal" value="'+esc(cur[i]||"2 × 40 menit")+'" placeholder="cth: 2 × 40 menit">';
+    wrap.appendChild(row);
+  }
+}
+function getWaktuList(){
+  const w = [...document.querySelectorAll("#waktuList .wVal")].map(i=>i.value.trim()||"disesuaikan");
+  return w.length ? w : ["disesuaikan"];
+}
+/* Ringkas utk baris sebaris; rinci utk blok konfigurasi */
+function alokasiRingkas(d){
+  const w = d.waktuList, semua = w.every(x=>x===w[0]);
+  return semua ? (d.jml + " pertemuan × " + w[0])
+               : (d.jml + " pertemuan, alokasi berbeda tiap pertemuan (lihat rincian)");
+}
+function alokasiRinci(){
+  const w = getWaktuList(), n = w.length, semua = w.every(x=>x===w[0]);
+  if(semua) return ["Alokasi           : " + n + " pertemuan × " + w[0]];
+  const L = ["Alokasi           : " + n + " pertemuan (berbeda tiap pertemuan):"];
+  w.forEach((x,i)=>L.push("  • Pertemuan " + (i+1) + ": " + x));
+  return L;
+}
+
 /* ============ CONTOH ============ */
 function isiContoh(){
   $("fNama").value = "Pak Gun"; $("fSatuan").value = "SMPN 1 Punggur";
@@ -502,7 +538,7 @@ function isiContoh(){
   $("fKelas").value = "7"; $("fFase").value = "D";
   $("fMapel").value = "Matematika"; autoCheck();
   $("fMateri").value = "Bilangan Bulat";
-  $("fJml").value = 7; $("fWaktu").value = "2 × 40 menit";
+  $("fJml").value = 7; renderWaktu();
   $("fTP").value = "membaca dan menulis bilangan bulat\nmembandingkan bilangan bulat\nmenentukan hasil operasi hitung bilangan bulat\nmemecahkan masalah sehari-hari yang melibatkan bilangan bulat";
   setJenis("lengkap");
   const cb = document.querySelectorAll("#ddPanel input");
@@ -525,7 +561,7 @@ function getForm(){
     mapel: val("fMapel"), materi: val("fMateri"),
     temaPAUD: val("fTemaPAUD"), bidangBK: val("fBidangBK"),
     jml: Math.max(1, Math.min(12, +val("fJml") || 1)),
-    waktu: val("fWaktu") || "disesuaikan",
+    waktuList: getWaktuList(),
     jenis, fase, prinsip,
     model: val("fModel"), output: val("fOutput"),
     tp: val("fTP"), dimensi: getDimensi(),
@@ -567,7 +603,7 @@ function strukturDokumen(d){
     L.push("Susun dokumen dengan TEPAT 4 bagian berikut (jangan ditambah/dikurangi):");
     L.push("");
     L.push("BAGIAN 1 — IDENTITAS");
-    L.push(idLine + " | Alokasi waktu: "+d.jml+" pertemuan × "+d.waktu+" | Model: "+d.model);
+    L.push(idLine + " | Alokasi waktu: "+alokasiRingkas(d)+" | Model: "+d.model);
     L.push("");
     L.push("BAGIAN 2 — IDENTIFIKASI");
     L.push("a. Karakteristik murid: [AI merumuskan sesuai jenjang "+d.jenjang+"]");
@@ -585,7 +621,7 @@ function strukturDokumen(d){
     L.push("BAGIAN 4 — LANGKAH PEMBELAJARAN (per pertemuan, "+d.jml+" pertemuan)");
     for(let p=1;p<=d.jml;p++){
       L.push("");
-      L.push("Pertemuan "+p+" ("+d.waktu+") — fase: "+faseLbl);
+      L.push("Pertemuan "+p+" ("+(d.waktuList[p-1]||"disesuaikan")+") — fase: "+faseLbl);
       langkahFase.forEach(f=>L.push("  • "+f+": tulis langkah rinci langkah-demi-langkah (guru melakukan apa, murid melakukan apa) + alokasi menit tiap langkah."));
     }
     L.push("");
@@ -593,7 +629,7 @@ function strukturDokumen(d){
   }
   else if(d.jenis === "satulembar"){
     L.push("Susun dalam format TABEL 2 KOLOM (siap salin ke Word):");
-    L.push("- Kolom SEMPIT (kiri, ±30%): identitas ("+idLine+"), alokasi "+d.jml+" × "+d.waktu+", TP ringkas (1–4 butir), asesmen ringkas.");
+    L.push("- Kolom SEMPIT (kiri, ±30%): identitas ("+idLine+"), alokasi "+alokasiRingkas(d)+", TP ringkas (1–4 butir), asesmen ringkas.");
     L.push("- Kolom LEBAR (kanan, ±70%): identifikasi singkat (karakteristik murid & materi + miskonsepsi) dan LANGKAH PEMBELAJARAN per pertemuan ("+d.jml+" pertemuan) dengan fase "+faseLbl+", rinci langkah-demi-langkah + menit.");
     L.push("- Di bawah tabel: rubrik asesmen formatif singkat + tindak lanjut.");
     L.push("ATURAN PENOMORAN: setiap daftar bernomor mulai dari 1 di tiap sel/bagian.");
@@ -602,7 +638,7 @@ function strukturDokumen(d){
     L.push("Susun MODUL AJAR dengan format resmi 3 komponen:");
     L.push("");
     L.push("A. INFORMASI UMUM");
-    L.push(idLine+" | Alokasi: "+d.jml+" × "+d.waktu+" | Kompetensi awal: "+(d.kompetensi||"[AI merumuskan]")+" | DPL terpilih | Sarana-prasarana | Target murid | Model: "+d.model);
+    L.push(idLine+" | Alokasi: "+alokasiRingkas(d)+" | Kompetensi awal: "+(d.kompetensi||"[AI merumuskan]")+" | DPL terpilih | Sarana-prasarana | Target murid | Model: "+d.model);
     L.push("");
     L.push("B. KOMPONEN INTI");
     L.push("- Tujuan pembelajaran (1–4 butir, dari CP/ATP/Panduan Mapel)");
@@ -638,7 +674,7 @@ function strukturDokumen(d){
     L.push("4. MATERI LAYANAN — topik: "+d.materi);
     L.push("5. METODE & TEKNIK — [AI memilihkan: diskusi, sosiodrama, simulasi, curah pendapat, dsb.]");
     L.push("6. MEDIA & SUMBER — [AI menyesuaikan]");
-    L.push("7. LANGKAH LAYANAN — tahap: pembuka, inti (eksplorasi–identifikasi–alternatif–komitmen), penutup; rinci + menit; alokasi "+d.jml+" pertemuan × "+d.waktu);
+    L.push("7. LANGKAH LAYANAN — tahap: pembuka, inti (eksplorasi–identifikasi–alternatif–komitmen), penutup; rinci + menit; alokasi "+alokasiRingkas(d));
     L.push("8. PENILAIAN HASIL LAYANAN — Laiseg (penilaian segera), Laijapen (jangka pendek), Laijapang (jangka panjang)");
     L.push("9. TINDAK LANJUT — rencana layanan lanjutan / alih tangan bila diperlukan");
   }
@@ -661,7 +697,7 @@ function buildPrompt(d){
   L.push("Materi pokok      : " + d.materi);
   if(d.jenjang==="TK/PAUD" && d.temaPAUD) L.push("Tema/Subtema      : " + d.temaPAUD);
   if(isBK(d.mapel)) L.push("Bidang layanan    : " + d.bidangBK);
-  L.push("Alokasi           : " + d.jml + " pertemuan × " + d.waktu);
+  alokasiRinci().forEach(x=>L.push(x));
   L.push("Model             : " + d.model);
   L.push("Fase langkah      : " + (d.fase==="mam" ? "Memahami – Mengaplikasi – Merefleksi" : "Pendahuluan – Inti – Penutup"));
   L.push("Format keluaran   : " + d.output);
@@ -849,7 +885,8 @@ function doImport(file){
 
 /* ============ INIT ============ */
 document.addEventListener("DOMContentLoaded", ()=>{
-  renderJenis(); renderFase(); renderDimensi(); initDd(); renderAIButtons(); renderLib();
+  renderJenis(); renderFase(); renderDimensi(); initDd(); renderAIButtons(); renderLib(); renderWaktu();
+  $("fJml").addEventListener("input", ()=>renderWaktu(true));
   $("fJenjang").addEventListener("change", onJenjang);
   $("fMapel").addEventListener("input", autoCheck);
   $("btnSample").addEventListener("click", isiContoh);
