@@ -162,6 +162,7 @@
           <option>SMP</option>
           <option>SMA</option>
           <option>SMK</option>
+          <option>Umum</option>
         </select>
       </div>
       <div>
@@ -338,14 +339,16 @@ const TARGET = {
   "SD":"anak SD",
   "SMP":"remaja SMP (13–15 tahun)",
   "SMA":"remaja SMA (16–18 tahun)",
-  "SMK":"remaja SMK (16–18 tahun)"
+  "SMK":"remaja SMK (16–18 tahun)",
+  "Umum":"khalayak umum (termasuk guru/orang dewasa)"
 };
 const BAHASA = {
   "TK/PAUD":"Kalimat SANGAT pendek (maks 8 kata), kata konkret dari kehidupan sehari-hari, banyak pengulangan yang menyenangkan. Tanpa istilah abstrak.",
   "SD":"Kalimat pendek (maks 12 kata), kosakata sederhana, boleh ada dialog antar tokoh yang hidup.",
   "SMP":"Bahasa santai khas remaja, kalimat bervariasi, boleh ada humor ringan yang sopan.",
   "SMA":"Bahasa baku yang luwes, boleh memakai istilah mapel asal dijelaskan lewat konteks, nada boleh reflektif.",
-  "SMK":"Bahasa baku yang luwes dan kontekstual dengan dunia kerja, istilah mapel dijelaskan lewat konteks."
+  "SMK":"Bahasa baku yang luwes dan kontekstual dengan dunia kerja, istilah mapel dijelaskan lewat konteks.",
+  "Umum":"Bahasa Indonesia baku yang luwes dan komunikatif untuk khalayak umum/dewasa; istilah populer boleh dipakai."
 };
 const LS_KEY = "sastra_prompter_lib";
 
@@ -377,6 +380,7 @@ function isiContoh(){
   $("fJudul").value = "Kiki dan Ember Ajaib";
   $("fMapel").value = "IPA";
   $("fJenjang").value = "SD";
+  syncJenjang();
   $("fKelas").value = "4";
   $("fTP").value = "Peserta didik dapat menjelaskan tahapan siklus air (evaporasi, kondensasi, presipitasi) melalui cerita.";
   $("fMateri").value = "siklus air: evaporasi, kondensasi, presipitasi";
@@ -429,7 +433,7 @@ function buildPrompt(d){
   L.push("");
   L.push('"' + d.judul + '"');
   L.push("");
-  L.push(d.mapel + " • " + d.jenjang + (d.kelas ? " Kelas " + d.kelas : ""));
+  L.push(d.mapel + " • " + (d.jenjang === "Umum" ? "Umum" : d.jenjang + (d.kelas ? " Kelas " + d.kelas : "")));
   L.push("");
   L.push("Buatkan " + J.nama.toLowerCase() + " berbahasa Indonesia sesuai konfigurasi berikut.");
   L.push("");
@@ -654,10 +658,18 @@ function doImport(file){
 }
 
 /* ============ INIT ============ */
+function syncJenjang(){
+  const umum = $("fJenjang").value === "Umum";
+  const k = $("fKelas");
+  k.disabled = umum;
+  k.value = umum ? "Umum" : (k.value === "Umum" ? "" : k.value);
+  k.placeholder = umum ? "" : "cth: 4 / 7C / X-1";
+}
 document.addEventListener("DOMContentLoaded", ()=>{
-  renderAIRows(); renderLib(); syncOpsi();
+  renderAIRows(); renderLib(); syncOpsi(); syncJenjang();
   document.querySelectorAll('input[name="jenis"]').forEach(r=>
     r.addEventListener("change", syncOpsi));
+  $("fJenjang").addEventListener("change", syncJenjang);
   $("btnSample").addEventListener("click", isiContoh);
   $("btnGenerate").addEventListener("click", doGenerate);
   $("btnCopy").addEventListener("click", ()=>copyText(lastPrompt));
