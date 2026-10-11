@@ -270,7 +270,7 @@
 
   <div class="center">
     <button class="btn btn-primary gen-btn" id="btnGenerate" type="button">🪄 Generate Prompt</button>
-    <button class="btn btn-navy" id="btnSample" type="button">🎲 Contoh</button>
+    <button class="btn btn-navy" id="btnSample" type="button">✨ Contoh Cepat</button>
   </div>
 
   <!-- OUTPUT -->
@@ -373,22 +373,49 @@ function syncOpsi(){
   });
 }
 
-/* ============ CONTOH ============ */
+/* ============ CONTOH CEPAT (kontekstual per jenis karya) ============ */
+function setRadio(name, value){
+  const r = document.querySelector('input[name="'+name+'"][value="'+value+'"]');
+  if(r) r.checked = true;
+}
 function isiContoh(){
-  document.querySelector('input[name="jenis"][value="cerpen"]').checked = true;
-  syncOpsi();
-  $("fJudul").value = "Kiki dan Ember Ajaib";
-  $("fMapel").value = "IPA";
-  $("fJenjang").value = "SD";
+  const j = radioVal("jenis") || "cerpen";
+  const C = {
+    cerpen: {judul:"Kiki dan Ember Ajaib", mapel:"IPA", jenjang:"SD", kelas:"4",
+      tp:"Peserta didik dapat menjelaskan tahapan siklus air (evaporasi, kondensasi, presipitasi) melalui cerita.",
+      materi:"siklus air: evaporasi, kondensasi, presipitasi", moral:"berbagi itu membahagiakan",
+      radio:[["cPanjang","600"],["cSudut","ketiga"],["cGaya","santai"]]},
+    dongeng: {judul:"Kancil dan Jembatan Bambu", mapel:"Umum", jenjang:"TK/PAUD", kelas:"",
+      tp:"Anak berani mengakui kesalahan dan meminta maaf dengan tulus.",
+      materi:"kejujuran dan keberanian", moral:"berani jujur itu hebat", tokoh:"Kancil",
+      radio:[["dPanjang","200"]]},
+    lucu: {judul:"Udin dan Kalkulator Ajaib", mapel:"Matematika", jenjang:"SD", kelas:"5",
+      tp:"Peserta didik dapat melakukan operasi hitung campuran dengan teliti.",
+      materi:"operasi hitung campuran", moral:"teliti sebelum menjawab",
+      radio:[["lSumber","katakata"],["lPanjang","150"]]},
+    puisi: {judul:"Sungai di Desaku", mapel:"Bahasa Indonesia", jenjang:"SMP", kelas:"8",
+      tp:"Peserta didik dapat menulis puisi dengan citraan alam yang kuat.",
+      materi:"cinta tanah air", moral:"", pBait:"3",
+      radio:[["pBentuk","berima"]]},
+    pantun: {judul:"Penyemangat Workshop Guru PGRI", mapel:"Umum", jenjang:"Umum", kelas:"Umum",
+      tp:"Guru memahami AI dan bijak menggunakannya.",
+      materi:"guru, PGRI, AI", moral:"", nBait:"2",
+      radio:[["nPosisi","pembuka"]]}
+  }[j];
+  $("fJudul").value = C.judul;
+  $("fMapel").value = C.mapel;
+  $("fJenjang").value = C.jenjang;
   syncJenjang();
-  $("fKelas").value = "4";
-  $("fTP").value = "Peserta didik dapat menjelaskan tahapan siklus air (evaporasi, kondensasi, presipitasi) melalui cerita.";
-  $("fMateri").value = "siklus air: evaporasi, kondensasi, presipitasi";
-  $("fMoral").value = "berbagi itu membahagiakan";
-  document.querySelector('input[name="cPanjang"][value="600"]').checked = true;
-  document.querySelector('input[name="cSudut"][value="ketiga"]').checked = true;
-  document.querySelector('input[name="cGaya"][value="santai"]').checked = true;
-  toast("Contoh terisi — silakan ubah lalu Generate");
+  $("fKelas").value = C.kelas;
+  $("fTP").value = C.tp;
+  $("fMateri").value = C.materi;
+  $("fMoral").value = C.moral || "";
+  if(C.tokoh !== undefined) $("fTokoh").value = C.tokoh;
+  if(C.pBait) $("fPBait").value = C.pBait;
+  if(C.nBait) $("fNBait").value = C.nBait;
+  C.radio.forEach(([n,v])=>setRadio(n,v));
+  syncOpsi();
+  toast("Contoh cepat terisi — silakan ubah lalu Generate");
 }
 
 /* ============ FORM ============ */
@@ -479,7 +506,8 @@ function opsiDetail(d){
     R.push(["Bentuk", d.pBentuk === "bebas" ? "Puisi bebas" : "Puisi berima"]);
     R.push(["Jumlah bait", d.pBait + " bait"]);
   } else if(d.jenis === "pantun"){
-    const pos = {pembuka:"Pembuka pelajaran", penutup:"Penutup pelajaran", umum:"Umum"}[d.nPosisi] || d.nPosisi;
+    const au = d.jenjang === "Umum";
+    const pos = {pembuka: au ? "Pembuka acara" : "Pembuka pelajaran", penutup: au ? "Penutup acara" : "Penutup pelajaran", umum:"Umum"}[d.nPosisi] || d.nPosisi;
     R.push(["Posisi", pos]);
     R.push(["Jumlah bait", d.nBait + " bait"]);
   }
@@ -513,15 +541,16 @@ function strukturKarya(d){
     else S.push("Tanpa aturan rima, tetapi jaga irama dan pilihan kata yang indah.");
     if(d.materi) S.push("Selipkan nuansa materi (" + d.materi + ") lewat citraan, bukan penjelasan.");
   } else if(d.jenis === "pantun"){
-    const pos = {pembuka:"pembuka pelajaran", penutup:"penutup pelajaran", umum:"umum"}[d.nPosisi] || d.nPosisi;
+    const au = d.jenjang === "Umum";
+    const pos = {pembuka: au ? "pembuka acara" : "pembuka pelajaran", penutup: au ? "penutup acara" : "penutup pelajaran", umum:"umum"}[d.nPosisi] || d.nPosisi;
     S.push("ATURAN KHUSUS PANTUN — wajib dipatuhi:");
     S.push("• Setiap bait terdiri dari 4 baris: baris 1–2 adalah SAMPIRAN, baris 3–4 adalah ISI.");
     S.push("• Rima akhir baris berpola a-b-a-b atau a-a-a-a.");
     S.push("• Setiap baris 8–12 suku kata.");
     S.push("• Sampiran memakai citraan alam/keseharian yang indah dan TIDAK nyambung logis dengan isi.");
     S.push("Buat " + d.nBait + " bait pantun " + pos + " bertema \"" + d.judul + "\"" + (d.materi ? " yang menyisipkan materi (" + d.materi + ")" : "") + ".");
-    if(d.nPosisi === "pembuka") S.push("Nada: sapaan hangat dan penyemangat belajar.");
-    if(d.nPosisi === "penutup") S.push("Nada: reflektif, menutup pelajaran dengan kesan baik.");
+    if(d.nPosisi === "pembuka") S.push("Nada: sapaan hangat dan penyemangat.");
+    if(d.nPosisi === "penutup") S.push("Nada: reflektif, menutup dengan kesan baik.");
   }
   return S;
 }
