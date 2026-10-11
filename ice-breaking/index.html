@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ice Breaking & Apersepsi Prompter</title>
+<style>
+  :root{
+    --navy:#0f172a; --navy2:#1e293b; --gold:#f59e0b; --gold2:#fbbf24;
+    --bg:#f1f5f9; --card:#ffffff; --ink:#1e293b; --muted:#64748b;
+    --line:#e2e8f0; --red:#ef4444; --radius:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.55;}
+  .back-home{position:fixed; top:14px; left:14px; z-index:100; display:inline-flex; align-items:center; gap:6px;
+    background:var(--navy); color:#fff; text-decoration:none; font-size:.85rem; font-weight:700;
+    padding:9px 15px; border-radius:999px; border:1px solid rgba(245,158,11,.6);
+    box-shadow:0 4px 14px rgba(0,0,0,.25); transition:.15s;}
+  .back-home:hover{background:var(--gold); color:var(--navy); border-color:var(--gold);}
+  header.top{background:var(--navy2); color:#fff; padding:36px 20px 30px; text-align:center;
+    position:sticky; top:0; z-index:50; box-shadow:0 4px 18px rgba(15,23,42,.35);}
+  header.top h1{font-size:clamp(1.5rem,4vw,2.3rem); letter-spacing:.5px;}
+  header.top h1 .gold{color:var(--gold);}
+  header.top p{opacity:.88; margin-top:6px; font-size:clamp(.85rem,2.4vw,1rem);}
+  .badge{display:inline-block; background:rgba(245,158,11,.15); border:1px solid var(--gold);
+    color:var(--gold2); font-size:.75rem; padding:3px 12px; border-radius:999px; margin-top:10px;}
+  main{max-width:980px; margin:0 auto; padding:24px 16px 90px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px; margin-bottom:20px; box-shadow:0 2px 10px rgba(15,23,42,.06);}
+  .card h2{font-size:1.15rem; color:var(--navy); margin-bottom:4px; display:flex; align-items:center; gap:8px;}
+  .card h2 .num{background:var(--navy); color:#fff; width:28px; height:28px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; flex:none;}
+  .card .desc{color:var(--muted); font-size:.88rem; margin-bottom:16px;}
+  .sec-head-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:4px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  label.f{display:block; font-weight:600; font-size:.88rem; margin-bottom:6px; color:var(--navy);}
+  label.f .req{color:var(--red);}
+  .hint{font-size:.78rem; color:var(--muted); margin-top:4px;}
+  .note{background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:10px 14px;
+    font-size:.85rem; color:#92400e; margin-top:10px;}
+  input[type=text],input[type=number],select,textarea{
+    width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:.95rem; font-family:inherit; background:#fff; color:var(--ink);}
+  input:focus,select:focus,textarea:focus{outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(15,23,42,.12);}
+  textarea{min-height:74px; resize:vertical;}
+  input.invalid,textarea.invalid{border-color:var(--red); box-shadow:0 0 0 3px rgba(239,68,68,.12);}
+  .opt-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-bottom:14px;}
+  .opt{position:relative;}
+  .opt input{position:absolute; opacity:0; pointer-events:none;}
+  .opt .box{display:block; border:2px solid var(--line); border-radius:12px; padding:12px 12px; cursor:pointer;
+    transition:.15s; background:#fff; height:100%; min-width:0; overflow-wrap:break-word;}
+  .opt .box:hover{border-color:#b9c6da;}
+  .opt input:checked + .box{border-color:var(--gold); background:#fffbeb; box-shadow:0 0 0 3px rgba(245,158,11,.22);}
+  .opt input:focus-visible + .box{outline:2px solid var(--navy); outline-offset:2px;}
+  .opt .box .t{font-weight:700; font-size:.92rem; color:var(--navy);}
+  .opt .box .d{font-size:.78rem; color:var(--muted); margin-top:3px;}
+  .btn{display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; font-family:inherit;
+    font-weight:700; border-radius:12px; padding:13px 26px; font-size:1rem; transition:.15s;}
+  .btn-primary{background:var(--gold); color:var(--navy); box-shadow:0 4px 14px rgba(245,158,11,.4);}
+  .btn-primary:hover{background:var(--gold2); transform:translateY(-1px);}
+  .btn-navy{background:var(--navy); color:#fff;}
+  .btn-navy:hover{background:var(--navy2);}
+  .btn-ghost{background:#fff; color:var(--navy); border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--navy);}
+  .btn-sm{padding:8px 14px; font-size:.85rem; border-radius:9px;}
+  .btn-danger{background:#fee2e2; color:#b91c1c; border:1px solid #fecaca;}
+  .center{text-align:center; margin:26px 0 8px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+  .gen-btn{font-size:1.15rem; padding:16px 44px;}
+  #outputCard{display:none;}
+  #outputCard.show{display:block; animation:fadeUp .35s ease;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(12px);}to{opacity:1; transform:none;}}
+  .block-label{font-size:.8rem; font-weight:700; color:var(--navy); margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;}
+  pre#promptOut{background:#0f172a; color:#dbe7ff; border-radius:12px; padding:18px; font-size:.82rem;
+    line-height:1.6; max-height:460px; overflow:auto; white-space:pre-wrap; word-wrap:break-word;
+    font-family:"Cascadia Code",Consolas,"Courier New",monospace;}
+  .out-actions{display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 4px;}
+  .ai-label{font-size:.85rem; font-weight:700; color:var(--navy); margin-top:16px;}
+  .ai-label .hint{font-weight:400;}
+  .ai-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .lib-item{border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:10px;
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:#fbfcff;}
+  .lib-item .meta{flex:1; min-width:200px;}
+  .lib-item .meta .jt{font-weight:700; color:var(--navy);}
+  .lib-item .meta .js{font-size:.8rem; color:var(--muted);}
+  .lib-item .acts{display:flex; gap:6px; flex-wrap:wrap;}
+  .empty-lib{text-align:center; color:var(--muted); padding:26px 10px; font-size:.9rem;}
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+    background:var(--navy); color:#fff; padding:12px 22px; border-radius:999px; font-size:.9rem;
+    opacity:0; transition:.25s; z-index:200; box-shadow:0 6px 20px rgba(0,0,0,.25); pointer-events:none;
+    max-width:92vw; text-align:center;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  footer{background:var(--navy); color:#cdd8ea; text-align:center; padding:22px 16px; font-size:.88rem;}
+  footer .gold{color:var(--gold); font-weight:700;}
+  .sample-link{background:none; border:none; color:var(--navy); font-size:.82rem; cursor:pointer;
+    text-decoration:underline; font-family:inherit; padding:0;}
+  .khusus-panel{display:none;}
+  .khusus-panel.show{display:block; animation:fadeUp .25s ease;}
+</style>
+</head>
+<body>
+<a class="back-home" href="../">← 🏠 Beranda</a>
+
+<header class="top">
+  <h1>⚡ Ice Breaking <span class="gold">&</span> Apersepsi <span class="gold">Prompter</span></h1>
+  <p>Generator prompt ice breaking kelas — teka-teki, yel-yel, permainan & tebak gaya</p>
+  <span class="badge">5 jenis • berjangkar materi • siap tempel ke AI</span>
+</header>
+
+<main>
+  <!-- 1. JENIS -->
+  <section class="card">
+    <div class="sec-head-row">
+      <h2><span class="num">1</span> Jenis Ice Breaking</h2>
+      <button class="sample-link" id="btnSample" type="button">🎲 isi contoh cepat</button>
+    </div>
+    <p class="desc">Pilih satu jenis ice breaking yang ingin dibuatkan.</p>
+    <div class="opt-grid" id="jenisGrid">
+      <label class="opt"><input type="radio" name="jenis" value="teka-teki" checked><span class="box"><span class="t">🧩 Teka-teki Materi</span><span class="d">Teka-teki yang jawabannya materi pelajaran</span></span></label>
+      <label class="opt"><input type="radio" name="jenis" value="tebakan"><span class="box"><span class="t">😄 Tebak-tebakan Seru</span><span class="d">Lelucon ringan, boleh murni hiburan</span></span></label>
+      <label class="opt"><input type="radio" name="jenis" value="yel-yel"><span class="box"><span class="t">📣 Yel-yel Kelas</span><span class="d">Lirik + gerakan penyemangat bermuatan materi</span></span></label>
+      <label class="opt"><input type="radio" name="jenis" value="permainan"><span class="box"><span class="t">⚡ Permainan 5 Menit</span><span class="d">Game kelas cepat, seru, dan aman</span></span></label>
+      <label class="opt"><input type="radio" name="jenis" value="tebak-gaya"><span class="box"><span class="t">🎭 Tebak Gaya</span><span class="d">Charades: peragakan kosakata materi</span></span></label>
+    </div>
+  </section>
+
+  <!-- 2. KONTEKS -->
+  <section class="card">
+    <h2><span class="num">2</span> Konteks</h2>
+    <p class="desc">Kapan dan untuk siapa ice breaking ini?</p>
+    <label class="f">Tujuan</label>
+    <div class="opt-grid">
+      <label class="opt"><input type="radio" name="tujuan" value="Pembuka pelajaran" checked><span class="box"><span class="t">🌅 Pembuka pelajaran</span><span class="d">Apersepsi & pemantik semangat</span></span></label>
+      <label class="opt"><input type="radio" name="tujuan" value="Penyegar tengah jam"><span class="box"><span class="t">🔋 Penyegar tengah jam</span><span class="d">Ice breaking saat murid mulai lelah</span></span></label>
+      <label class="opt"><input type="radio" name="tujuan" value="Penutup seru"><span class="box"><span class="t">🎉 Penutup seru</span><span class="d">Akhiri jam dengan kesan positif</span></span></label>
+    </div>
+    <div class="grid2">
+      <div>
+        <label class="f" for="fMapel">Mapel</label>
+        <select id="fMapel">
+          <option>Matematika</option><option>Bahasa Indonesia</option><option>Bahasa Inggris</option>
+          <option>IPA</option><option>IPS</option><option>PPKn</option><option>PAI</option>
+          <option>PJOK</option><option>Seni Budaya</option><option>Prakarya</option>
+          <option>Informatika</option><option>Mulok</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fKelas">Kelas</label>
+        <input type="text" id="fKelas" placeholder="cth: 7C">
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <label class="f">Jenjang</label>
+      <div class="opt-grid">
+        <label class="opt"><input type="radio" name="jenjang" value="TK/PAUD"><span class="box"><span class="t">TK/PAUD</span></span></label>
+        <label class="opt"><input type="radio" name="jenjang" value="SD"><span class="box"><span class="t">SD</span></span></label>
+        <label class="opt"><input type="radio" name="jenjang" value="SMP" checked><span class="box"><span class="t">SMP</span></span></label>
+        <label class="opt"><input type="radio" name="jenjang" value="SMA"><span class="box"><span class="t">SMA</span></span></label>
+        <label class="opt"><input type="radio" name="jenjang" value="SMK"><span class="box"><span class="t">SMK</span></span></label>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. JANGKAR MATERI -->
+  <section class="card">
+    <h2><span class="num">3</span> Jangkar Materi</h2>
+    <p class="desc">Materi/TP yang menjadi acuan ice breaking.</p>
+    <label class="f" for="fMateri">Materi / TP terkait <span class="req">*</span></label>
+    <textarea id="fMateri" placeholder="cth: Bilangan bulat — penjumlahan dan pengurangan bilangan positif dan negatif"></textarea>
+    <div class="note">⚓ Ice breaking <b>DIKAITKAN</b> dengan materi ini — kecuali <b>Tebak-tebakan Seru</b> yang boleh murni hiburan (materi boleh dikosongkan).</div>
+  </section>
+
+  <!-- 4. KONDISI KELAS -->
+  <section class="card">
+    <h2><span class="num">4</span> Kondisi Kelas</h2>
+    <p class="desc">Sesuaikan dengan keadaan nyata kelasmu.</p>
+    <div class="grid2">
+      <div>
+        <label class="f" for="fMurid">Jumlah murid</label>
+        <input type="number" id="fMurid" min="1" max="200" value="32">
+      </div>
+      <div>
+        <label class="f">Lokasi</label>
+        <div class="opt-grid" style="margin-bottom:0">
+          <label class="opt"><input type="radio" name="lokasi" value="Dalam kelas" checked><span class="box"><span class="t">🏫 Dalam kelas</span></span></label>
+          <label class="opt"><input type="radio" name="lokasi" value="Luar kelas"><span class="box"><span class="t">🌳 Luar kelas</span></span></label>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <label class="f">Durasi</label>
+      <div class="opt-grid">
+        <label class="opt"><input type="radio" name="durasi" value="3 menit"><span class="box"><span class="t">3 menit</span><span class="d">Kilatan cepat</span></span></label>
+        <label class="opt"><input type="radio" name="durasi" value="5 menit" checked><span class="box"><span class="t">5 menit</span><span class="d">Standar</span></span></label>
+        <label class="opt"><input type="radio" name="durasi" value="10 menit"><span class="box"><span class="t">10 menit</span><span class="d">Lebih leluasa</span></span></label>
+      </div>
+      <label class="f">Alat bantu</label>
+      <div class="opt-grid">
+        <label class="opt"><input type="radio" name="alat" value="Tanpa alat" checked><span class="box"><span class="t">🙌 Tanpa alat</span><span class="d">Hanya tubuh & suara</span></span></label>
+        <label class="opt"><input type="radio" name="alat" value="Alat sederhana"><span class="box"><span class="t">🧰 Alat sederhana</span><span class="d">Kertas, spidol, dsb.</span></span></label>
+      </div>
+      <label class="f">Level energi</label>
+      <div class="opt-grid">
+        <label class="opt"><input type="radio" name="energi" value="Tenang"><span class="box"><span class="t">🍃 Tenang</span><span class="d">Fokus & kalem</span></span></label>
+        <label class="opt"><input type="radio" name="energi" value="Sedang" checked><span class="box"><span class="t">🙂 Sedang</span><span class="d">Seimbang</span></span></label>
+        <label class="opt"><input type="radio" name="energi" value="Heboh"><span class="box"><span class="t">🔥 Heboh</span><span class="d">Penuh gerak & tawa</span></span></label>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. KHUSUS JENIS -->
+  <section class="card" id="secKhusus" style="display:none">
+    <h2><span class="num">5</span> Khusus Jenis</h2>
+    <p class="desc">Pengaturan tambahan sesuai jenis yang dipilih.</p>
+    <div class="khusus-panel" id="panelYel">
+      <label class="f" for="fKatakunci">Kata kunci materi yang disisipkan ke lirik</label>
+      <input type="text" id="fKatakunci" placeholder="cth: bilangan bulat, positif, negatif">
+      <p class="hint">Pisahkan dengan koma. Kosongkan bila ingin AI yang memilih dari materi.</p>
+    </div>
+    <div class="khusus-panel" id="panelMain">
+      <label class="f" for="fIdeMain">Ide dasar permainan (opsional)</label>
+      <input type="text" id="fIdeMain" placeholder="cth: Estafet jawaban">
+      <p class="hint">Kosongkan bila ingin AI yang mengusulkan permainannya.</p>
+    </div>
+    <div class="khusus-panel" id="panelGaya">
+      <label class="f" for="fKosakata">Daftar kosakata untuk diperagakan (satu per baris)</label>
+      <textarea id="fKosakata" placeholder="cth:&#10;fotosintesis&#10;gravitasi&#10;evaporasi"></textarea>
+      <p class="hint">AI akan memakai daftar ini + menambahkan 5 kosakata lain dari materi yang sama.</p>
+    </div>
+  </section>
+
+  <div class="center">
+    <button class="btn btn-primary gen-btn" id="btnGenerate" type="button">🪄 Generate Prompt</button>
+    <button class="btn btn-ghost gen-btn" id="btnSample2" type="button">🎲 Contoh</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <section class="card" id="outputCard">
+    <h2><span class="num">✓</span> Prompt Siap Pakai</h2>
+    <p class="desc">Salin prompt ini ke AI favoritmu, atau tekan salah satu tombol di bawah (prompt otomatis tersalin lalu situs AI terbuka).</p>
+    <div class="block-label">📝 Prompt ice breaking</div>
+    <pre id="promptOut"></pre>
+    <div class="out-actions">
+      <button class="btn btn-navy btn-sm" id="btnCopy" type="button">📋 Salin</button>
+      <button class="btn btn-ghost btn-sm" id="btnDownload" type="button">⬇️ Unduh .md</button>
+      <button class="btn btn-ghost btn-sm" id="btnSave" type="button">💾 Simpan ke Pustaka</button>
+    </div>
+    <div class="ai-label">🚀 Kirim ke AI <span class="hint">(salin otomatis + buka tab baru)</span></div>
+    <div class="ai-row" id="aiRow"></div>
+  </section>
+
+  <!-- PUSTAKA -->
+  <section class="card">
+    <div class="sec-head-row">
+      <h2><span class="num">📚</span> Pustaka Ice Breaking Saya</h2>
+      <div>
+        <button class="btn btn-ghost btn-sm" id="btnExport" type="button">⬆️ Ekspor JSON</button>
+        <button class="btn btn-ghost btn-sm" id="btnImport" type="button">⬇️ Impor JSON</button>
+        <input type="file" id="fileImport" accept="application/json" style="display:none">
+      </div>
+    </div>
+    <p class="desc">Semua rancangan ice breaking tersimpan otomatis di perangkat ini.</p>
+    <div id="libList"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="gold">⚡ Ice Breaking & Apersepsi Prompter</div>
+  <div style="margin-top:6px">@2026 GezyTech Prompter. Dikembangkan oleh PakGun</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============ DATA ============ */
+const JENIS = {
+  "teka-teki":  {upper:"TEKA-TEKI MATERI",   label:"Teka-teki Materi"},
+  "tebakan":    {upper:"TEBAK-TEBAKAN SERU", label:"Tebak-tebakan Seru"},
+  "yel-yel":    {upper:"YEL-YEL KELAS",      label:"Yel-yel Kelas"},
+  "permainan":  {upper:"PERMAINAN 5 MENIT",  label:"Permainan 5 Menit"},
+  "tebak-gaya": {upper:"TEBAK GAYA",         label:"Tebak Gaya"}
+};
+const AI_LIST = [
+  {nama:"Muse", url:"https://muse.ai/"},
+  {nama:"ChatGPT", url:"https://chatgpt.com/"},
+  {nama:"Claude", url:"https://claude.ai/"},
+  {nama:"Gemini", url:"https://gemini.google.com/"},
+  {nama:"DeepSeek", url:"https://chat.deepseek.com/"},
+  {nama:"Grok", url:"https://grok.com/"},
+  {nama:"Copilot", url:"https://copilot.microsoft.com/"},
+  {nama:"Qwen", url:"https://chat.qwen.ai/"},
+  {nama:"Le Chat", url:"https://chat.mistral.ai/"},
+  {nama:"Perplexity", url:"https://www.perplexity.ai/"}
+];
+const USIA = {
+  "TK/PAUD": "Gunakan bahasa sangat sederhana, tanpa aktivitas baca-tulis, perbanyak gerakan tubuh dan lagu.",
+  "SD": "Gunakan kalimat pendek dan contoh konkret dari kehidupan sehari-hari anak.",
+  "SMP": "Boleh memakai humor dan tantangan berpikir ringan yang memancing rasa ingin tahu.",
+  "SMA": "Boleh memakai studi kasus mini dan diskusi singkat yang menantang nalar.",
+  "SMK": "Kaitkan dengan konteks dunia kerja/vokasi bila memungkinkan."
+};
+const LS_KEY = "icebreaking_prompter_lib";
+</script>
+
+<script>
+"use strict";
+/* ============ HELPERS ============ */
+const $ = id => document.getElementById(id);
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 2400);
+}
+function esc(s){ return String(s==null?"":s); }
+function radioVal(name){
+  const el = document.querySelector('input[name="'+name+'"]:checked');
+  return el ? el.value : "";
+}
+function setRadio(name, value){
+  const el = document.querySelector('input[name="'+name+'"][value="'+value+'"]');
+  if(el){ el.checked = true; el.dispatchEvent(new Event("change", {bubbles:true})); }
+}
+
+/* ============ PANEL KHUSUS JENIS ============ */
+function updateKhusus(){
+  const j = radioVal("jenis");
+  const map = {"yel-yel":"panelYel", "permainan":"panelMain", "tebak-gaya":"panelGaya"};
+  ["panelYel","panelMain","panelGaya"].forEach(id=>$(id).classList.remove("show"));
+  if(map[j]){
+    $(map[j]).classList.add("show");
+    $("secKhusus").style.display = "block";
+  } else {
+    $("secKhusus").style.display = "none";
+  }
+}
+
+/* ============ CONTOH ============ */
+function isiContoh(){
+  setRadio("jenis","teka-teki");
+  setRadio("tujuan","Pembuka pelajaran");
+  $("fMapel").value = "Matematika";
+  $("fKelas").value = "7C";
+  setRadio("jenjang","SMP");
+  $("fMateri").value = "Bilangan bulat — penjumlahan dan pengurangan bilangan positif dan negatif";
+  $("fMurid").value = 32;
+  setRadio("durasi","5 menit");
+  setRadio("alat","Tanpa alat");
+  setRadio("energi","Sedang");
+  setRadio("lokasi","Dalam kelas");
+  $("fKatakunci").value = "bilangan bulat, positif, negatif";
+  $("fIdeMain").value = "Estafet jawaban";
+  $("fKosakata").value = "fotosintesis\ngravitasi\nevaporasi";
+  toast("Contoh terisi — silakan ubah lalu Generate 🎲");
+}
+
+/* ============ FORM ============ */
+function getForm(){
+  const val = id => $(id).value.trim();
+  return {
+    jenis: radioVal("jenis") || "teka-teki",
+    tujuan: radioVal("tujuan"),
+    mapel: val("fMapel"),
+    kelas: val("fKelas"),
+    jenjang: radioVal("jenjang"),
+    materi: val("fMateri"),
+    murid: Math.max(1, Math.min(200, +val("fMurid") || 32)),
+    durasi: radioVal("durasi"),
+    alat: radioVal("alat"),
+    energi: radioVal("energi"),
+    lokasi: radioVal("lokasi"),
+    katakunci: val("fKatakunci"),
+    ideMain: val("fIdeMain"),
+    kosakata: val("fKosakata").split("\n").map(s=>s.trim()).filter(Boolean)
+  };
+}
+function validate(d){
+  let ok = true;
+  const needMateri = d.jenis !== "tebakan";
+  $("fMateri").classList.toggle("invalid", needMateri && !d.materi);
+  if(needMateri && !d.materi){ ok = false; toast("Lengkapi: materi/TP terkait ⚓"); }
+  return ok;
+}
+</script>
+
+<script>
+"use strict";
+/* ============ BANGUN PROMPT ============ */
+function buildPrompt(d){
+  const J = JENIS[d.jenis];
+  const L = [];
+  const kelasTxt = d.kelas ? " Kelas " + d.kelas : "";
+  L.push("🎯 BUAT " + J.upper);
+  L.push(d.mapel + " • " + d.jenjang + kelasTxt + " • " + d.tujuan);
+  L.push("");
+  L.push("Buatkan ice breaking " + d.tujuan.toLowerCase() + " berdurasi ±" + d.durasi + " untuk " + d.murid + " murid.");
+  L.push("");
+  L.push("─── A. KONFIGURASI ───");
+  L.push("Jenis ice breaking : " + J.label);
+  L.push("Tujuan             : " + d.tujuan);
+  L.push("Mapel              : " + d.mapel + " • " + d.jenjang + kelasTxt);
+  if(d.materi) L.push("Materi terkait     : " + d.materi + "  ← JANGKAR: ice breaking HARUS dikaitkan dengan materi ini");
+  else L.push("Materi terkait     : (tidak ada — murni hiburan)");
+  L.push("Jumlah murid       : " + d.murid);
+  L.push("Durasi             : " + d.durasi);
+  L.push("Alat bantu         : " + d.alat);
+  L.push("Level energi       : " + d.energi);
+  L.push("Lokasi             : " + d.lokasi);
+  L.push("");
+  L.push("─── B. FORMAT KELUARAN ───");
+  if(d.jenis === "teka-teki"){
+    L.push("Buatkan 8 teka-teki bernomor tentang materi di atas, urut dari paling mudah ke paling menantang.");
+    L.push("Untuk TIAP teka-teki tulis:");
+    L.push("  • Pertanyaan: ...");
+    L.push("  • JAWABAN: ...");
+    L.push("  • Kaitan materi: 1 kalimat penjelasan mengapa jawabannya demikian.");
+  } else if(d.jenis === "tebakan"){
+    L.push("Buatkan 8 tebak-tebakan lucu bernomor beserta jawabannya.");
+    L.push("Boleh MURNI hiburan tanpa kaitan materi — yang penting mengundang tawa dan cocok untuk murid " + d.jenjang + ".");
+    L.push("Hindari lelucon yang menyinggung fisik, suku, agama, atau kondisi keluarga.");
+  } else if(d.jenis === "yel-yel"){
+    L.push("Buatkan 1 yel-yel kelas yang membakar semangat:");
+    L.push("  • Lirik 4–6 baris yang menyisipkan kata kunci: " + (d.katakunci || "(pilih sendiri dari materi terkait)"));
+    L.push("  • Gerakan tangan/kaki untuk tiap baris — tulis dalam kurung di akhir baris.");
+    L.push("  • Saran nada/irama (mis. diadaptasi dari lagu anak yang populer).");
+    L.push("  • Cara memimpin: 1 orang memimpin, seluruh kelas mengikuti dengan kompak.");
+  } else if(d.jenis === "permainan"){
+    if(d.ideMain) L.push("Ide dasar dari guru: \"" + d.ideMain + "\" — kembangkan menjadi permainan utuh berikut:");
+    L.push("Buatkan 1 permainan kelas berdurasi ±" + d.durasi + ":");
+    L.push("  • Nama permainan");
+    L.push("  • Tujuan (kaitkan dengan materi bila memungkinkan)");
+    L.push("  • Langkah: tulis bernomor (Langkah 1, Langkah 2, Langkah 3, ...) yang jelas dan singkat");
+    L.push("  • Aturan main (maksimal 4 aturan)");
+    if(d.murid > 40) L.push("  • Variasi karena murid berjumlah " + d.murid + " (>40): cara membagi kelompok agar semua tetap aktif");
+    else L.push("  • Variasi bila murid > 40: cara membagi kelompok agar semua tetap aktif");
+    L.push("  • Penutup: cara mengakhiri permainan dengan seru dalam sisa waktu.");
+  } else if(d.jenis === "tebak-gaya"){
+    L.push("Buatkan panduan main Tebak Gaya (charades kosakata materi):");
+    L.push("  • Aturan main singkat: pembagian tim, giliran, batas waktu menebak, sistem skor.");
+    if(d.kosakata.length){
+      L.push("  • Daftar kata siap pakai dari guru:");
+      d.kosakata.forEach(k=>L.push("    - " + k));
+      L.push("  • Tambahkan 5 kosakata lain dari materi yang sama (di luar daftar di atas).");
+    } else {
+      L.push("  • Buatkan 10 kosakata dari materi terkait, urut dari termudah diperagakan ke tersulit.");
+    }
+    L.push("  • Tips agar murid pemalu tetap berani tampil (boleh berpasangan, boleh menunjuk wakil).");
+  }
+  L.push("");
+  L.push("─── C. ATURAN ───");
+  L.push("1. " + USIA[d.jenjang]);
+  L.push("2. Aman dimainkan di " + d.lokasi.toLowerCase() + " — tanpa alat berbahaya, tanpa gerakan berisiko cedera.");
+  L.push("3. Semua " + d.murid + " murid bisa ikut, termasuk yang pemalu — sediakan peran non-tampil (mis. penjaga skor, pembaca soal, juri).");
+  L.push("4. Bahasa Indonesia santai, memotivasi, dan mudah dipahami murid " + d.jenjang + ".");
+  L.push("");
+  L.push("─── LARANGAN ───");
+  L.push("1. Dilarang hukuman yang mempermalukan.");
+  L.push("2. Dilarang permainan yang menyisihkan murid.");
+  L.push("3. Dilarang konten menakutkan/kasar.");
+  L.push("4. Dilarang alat berbahaya.");
+  return L.join("\n");
+}
+
+/* ============ GENERATE & OUTPUT ============ */
+let lastPrompt = "", lastData = null;
+function doGenerate(){
+  const d = getForm();
+  if(!validate(d)) return;
+  lastData = d;
+  lastPrompt = buildPrompt(d);
+  $("promptOut").textContent = lastPrompt;
+  $("outputCard").classList.add("show");
+  if($("outputCard").scrollIntoView) $("outputCard").scrollIntoView({behavior:"smooth", block:"start"});
+  toast("Prompt ice breaking berhasil dibuat 🪄");
+}
+function copyText(t){
+  if(!t){ toast("Generate dulu"); return; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>toast("Tersalin 📋")).catch(()=>fallbackCopy(t));
+  } else fallbackCopy(t);
+}
+function fallbackCopy(t){
+  const ta = document.createElement("textarea");
+  ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toast("Tersalin 📋"); }
+  catch(e){ toast("Gagal menyalin"); }
+  document.body.removeChild(ta);
+}
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60) || "ice-breaking"; }
+function doDownload(){
+  if(!lastPrompt){ toast("Generate dulu"); return; }
+  const J = JENIS[lastData.jenis];
+  const md = "# " + J.label + " — " + lastData.mapel + " " + lastData.jenjang + (lastData.kelas ? " " + lastData.kelas : "") +
+    "\n\n```\n" + lastPrompt + "\n```\n";
+  const blob = new Blob([md], {type:"text/markdown;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = slug(J.label + "-" + lastData.mapel) + ".md";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("File .md diunduh ⬇️");
+}
+
+/* ============ KIRIM KE AI ============ */
+function renderAIRows(){
+  $("aiRow").innerHTML = AI_LIST.map((a,i)=>
+    '<button class="btn btn-ghost btn-sm" type="button" data-ai="'+i+'">🚀 '+a.nama+'</button>').join("");
+  $("aiRow").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    const ai = AI_LIST[+b.getAttribute("data-ai")];
+    if(!lastPrompt){ toast("Generate dulu"); return; }
+    copyText(lastPrompt);
+    window.open(ai.url, "_blank", "noopener");
+    toast("Membuka "+ai.nama+" — prompt tersalin 📋");
+  }));
+}
+
+/* ============ PUSTAKA ============ */
+function loadLib(){
+  try{ const raw = localStorage.getItem(LS_KEY); const arr = raw ? JSON.parse(raw) : []; return Array.isArray(arr) ? arr : []; }
+  catch(e){ return []; }
+}
+function saveLib(arr){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(arr)); return true; }
+  catch(e){ toast("Penyimpanan penuh / tidak tersedia"); return false; }
+}
+function doSave(){
+  if(!lastData){ toast("Generate dulu"); return; }
+  const d = lastData, lib = loadLib();
+  lib.unshift({id:"i"+Date.now().toString(36), jenis:JENIS[d.jenis].label,
+    mapel:d.mapel, jenjang:d.jenjang, kelas:d.kelas, tujuan:d.tujuan,
+    ts:Date.now(), prompt:lastPrompt});
+  if(saveLib(lib)){ renderLib(); toast("Tersimpan di Pustaka 💾"); }
+}
+function renderLib(){
+  const lib = loadLib(), wrap = $("libList");
+  if(!lib.length){
+    wrap.innerHTML = '<div class="empty-lib">📭 Belum ada ice breaking tersimpan.<br>Generate lalu tekan <b>💾 Simpan ke Pustaka</b>.</div>';
+    return;
+  }
+  wrap.innerHTML = lib.map(it=>{
+    const tgl = new Date(it.ts).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"});
+    return '<div class="lib-item"><div class="meta"><div class="jt">'+esc(it.jenis)+'</div>'+
+      '<div class="js">'+esc(it.mapel||"")+' • '+esc(it.jenjang||"")+(it.kelas?" "+esc(it.kelas):"")+' • '+esc(it.tujuan||"")+' • '+tgl+'</div></div>'+
+      '<div class="acts">'+
+      '<button class="btn btn-navy btn-sm" data-act="view" data-id="'+it.id+'">📥 Muat</button>'+
+      '<button class="btn btn-ghost btn-sm" data-act="dl" data-id="'+it.id+'">⬇️</button>'+
+      '<button class="btn btn-danger btn-sm" data-act="del" data-id="'+it.id+'">🗑️</button>'+
+      '</div></div>';
+  }).join("");
+  wrap.querySelectorAll("button[data-act]").forEach(b=>b.addEventListener("click",()=>{
+    const id = b.getAttribute("data-id"), act = b.getAttribute("data-act");
+    const it = loadLib().find(x=>x.id===id); if(!it) return;
+    if(act==="view"){
+      lastPrompt = it.prompt; lastData = {jenis:"teka-teki", mapel:it.mapel||"", jenjang:it.jenjang||"", kelas:it.kelas||""};
+      $("promptOut").textContent = it.prompt;
+      $("outputCard").classList.add("show");
+      if($("outputCard").scrollIntoView) $("outputCard").scrollIntoView({behavior:"smooth", block:"start"});
+      toast("Prompt dimuat dari Pustaka 📥");
+    }
+    else if(act==="dl"){
+      const md = "# "+it.jenis+"\n\n```\n"+it.prompt+"\n```\n";
+      const blob = new Blob([md], {type:"text/markdown;charset=utf-8"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = slug(it.jenis) + ".md";
+      document.body.appendChild(a); a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+    else if(act==="del"){ if(confirm("Hapus rancangan ini?")){ saveLib(loadLib().filter(x=>x.id!==id)); renderLib(); } }
+  }));
+}
+function doExport(){
+  const lib = loadLib();
+  if(!lib.length){ toast("Pustaka masih kosong"); return; }
+  const blob = new Blob([JSON.stringify(lib,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "pustaka-ice-breaking-prompter.json";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("Pustaka diekspor ⬆️");
+}
+function doImport(file){
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const arr = JSON.parse(r.result);
+      if(!Array.isArray(arr)) throw new Error("format salah");
+      const cur = loadLib(), ids = new Set(cur.map(x=>x.id));
+      let n = 0;
+      arr.forEach(it=>{ if(it && it.prompt && !ids.has(it.id)){ cur.push(it); n++; } });
+      cur.sort((a,b)=>(b.ts||0)-(a.ts||0));
+      if(saveLib(cur)){ renderLib(); toast(n + " rancangan diimpor ⬇️"); }
+    }catch(e){ toast("File tidak valid"); }
+  };
+  r.readAsText(file);
+}
+
+/* ============ INIT ============ */
+document.addEventListener("DOMContentLoaded", ()=>{
+  renderAIRows(); renderLib(); updateKhusus();
+  document.querySelectorAll('input[name="jenis"]').forEach(r=>r.addEventListener("change", updateKhusus));
+  $("btnSample").addEventListener("click", isiContoh);
+  $("btnSample2").addEventListener("click", isiContoh);
+  $("btnGenerate").addEventListener("click", doGenerate);
+  $("btnCopy").addEventListener("click", ()=>copyText(lastPrompt));
+  $("btnSave").addEventListener("click", doSave);
+  $("btnDownload").addEventListener("click", doDownload);
+  $("btnExport").addEventListener("click", doExport);
+  $("btnImport").addEventListener("click", ()=>$("fileImport").click());
+  $("fileImport").addEventListener("change", e=>{ if(e.target.files[0]) doImport(e.target.files[0]); e.target.value=""; });
+});
+</script>
+</body>
+</html>

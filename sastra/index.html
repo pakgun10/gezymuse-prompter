@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sastra Edukasi Prompter — Generator Prompt Karya Sastra Pembelajaran</title>
+<style>
+  :root{
+    --navy:#1B2A4A; --navy2:#243b63; --gold:#F5B301; --gold2:#d99e00;
+    --bg:#F4F6FB; --card:#ffffff; --ink:#1e2a3a; --muted:#6b7a90;
+    --line:#e3e9f2; --green:#22c55e; --red:#ef4444; --radius:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.55;}
+  .back-home{position:fixed; top:14px; left:14px; z-index:100; display:inline-flex; align-items:center; gap:6px;
+    background:var(--navy); color:#fff; text-decoration:none; font-size:.85rem; font-weight:700;
+    padding:9px 15px; border-radius:999px; border:1px solid rgba(245,179,1,.55);
+    box-shadow:0 4px 14px rgba(0,0,0,.25); transition:.15s;}
+  .back-home:hover{background:var(--gold); color:var(--navy); border-color:var(--gold);}
+  header.top{background:var(--navy); color:#fff; padding:34px 20px 30px; text-align:center;
+    position:sticky; top:0; z-index:50; box-shadow:0 4px 18px rgba(27,42,74,.35);}
+  header.top h1{font-size:clamp(1.6rem,4vw,2.4rem); letter-spacing:.5px;}
+  header.top h1 .gold{color:var(--gold);}
+  header.top p{opacity:.88; margin-top:6px; font-size:clamp(.85rem,2.4vw,1rem);}
+  .badge{display:inline-block; background:rgba(245,179,1,.16); border:1px solid var(--gold);
+    color:var(--gold); font-size:.75rem; padding:3px 12px; border-radius:999px; margin-top:10px;}
+  main{max-width:980px; margin:0 auto; padding:24px 16px 90px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px; margin-bottom:20px; box-shadow:0 2px 10px rgba(27,42,74,.06);}
+  .card h2{font-size:1.15rem; color:var(--navy); margin-bottom:4px; display:flex; align-items:center; gap:8px;}
+  .card h2 .num{background:var(--navy); color:#fff; width:28px; height:28px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; flex:none;}
+  .card .desc{color:var(--muted); font-size:.88rem; margin-bottom:16px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  label.f{display:block; font-weight:600; font-size:.88rem; margin-bottom:6px; color:var(--navy);}
+  label.f .req{color:var(--red);}
+  .hint{font-size:.78rem; color:var(--muted); margin-top:4px;}
+  input[type=text],input[type=number],select,textarea{
+    width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:.95rem; font-family:inherit; background:#fff; color:var(--ink);}
+  input:focus,select:focus,textarea:focus{outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(27,42,74,.12);}
+  textarea{min-height:74px; resize:vertical;}
+  input.invalid,select.invalid,textarea.invalid{border-color:var(--red); box-shadow:0 0 0 3px rgba(239,68,68,.12);}
+  /* kartu opsi */
+  .optgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px;}
+  .opt{position:relative;}
+  .opt input{position:absolute; opacity:0; pointer-events:none;}
+  .opt .box{display:block; border:2px solid var(--line); border-radius:12px; padding:13px 12px; cursor:pointer;
+    transition:.15s; background:#fff; height:100%; min-width:0; overflow-wrap:break-word; text-align:center;}
+  .opt .box:hover{border-color:#b9c6da;}
+  .opt input:checked + .box{border-color:var(--gold); background:#fff8e6; box-shadow:0 0 0 3px rgba(245,179,1,.25);}
+  .opt .box .t{font-weight:700; font-size:1.6rem; display:block;}
+  .opt .box .l{font-weight:700; font-size:.92rem; color:var(--navy); display:block; margin-top:4px;}
+  .opt .box .d{font-size:.78rem; color:var(--muted); margin-top:3px; display:block;}
+  .opt .box .v{font-weight:700; font-size:.92rem; color:var(--navy); display:block;}
+  .opt-title{font-weight:700; font-size:.88rem; color:var(--navy); margin:14px 0 8px;}
+  .opt-title:first-child{margin-top:0;}
+  .opsi-jenis{display:none; border-top:1px dashed var(--line); margin-top:6px; padding-top:6px;}
+  .opsi-jenis.active{display:block;}
+  /* tombol */
+  .btn{display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; font-family:inherit;
+    font-weight:700; border-radius:12px; padding:13px 26px; font-size:1rem; transition:.15s;}
+  .btn-primary{background:var(--gold); color:var(--navy); box-shadow:0 4px 14px rgba(245,179,1,.4);}
+  .btn-primary:hover{background:var(--gold2); transform:translateY(-1px);}
+  .btn-navy{background:var(--navy); color:#fff;}
+  .btn-navy:hover{background:var(--navy2);}
+  .btn-ghost{background:#fff; color:var(--navy); border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--navy);}
+  .btn-sm{padding:8px 14px; font-size:.85rem; border-radius:9px;}
+  .btn-danger{background:#fee2e2; color:#b91c1c; border:1px solid #fecaca;}
+  .center{text-align:center; margin:26px 0 8px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+  .gen-btn{font-size:1.15rem; padding:16px 44px;}
+  #outputCard{display:none;}
+  #outputCard.show{display:block; animation:fadeUp .35s ease;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(12px);}to{opacity:1; transform:none;}}
+  .out-block{margin-bottom:16px;}
+  .block-label{font-size:.8rem; font-weight:700; color:var(--navy); margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;}
+  pre#promptOut{background:#0f1b30; color:#dbe7ff; border-radius:12px; padding:18px; font-size:.82rem;
+    line-height:1.6; max-height:460px; overflow:auto; white-space:pre-wrap; word-wrap:break-word;
+    font-family:"Cascadia Code",Consolas,"Courier New",monospace;}
+  .out-actions{display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 4px;}
+  .lib-item{border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:10px;
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:#fbfcff;}
+  .lib-item .meta{flex:1; min-width:200px;}
+  .lib-item .meta .jt{font-weight:700; color:var(--navy);}
+  .lib-item .meta .js{font-size:.8rem; color:var(--muted);}
+  .lib-item .acts{display:flex; gap:6px; flex-wrap:wrap;}
+  .empty-lib{text-align:center; color:var(--muted); padding:26px 10px; font-size:.9rem;}
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+    background:var(--navy); color:#fff; padding:12px 22px; border-radius:999px; font-size:.9rem;
+    opacity:0; transition:.25s; z-index:200; box-shadow:0 6px 20px rgba(0,0,0,.25); pointer-events:none;
+    max-width:92vw; text-align:center;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  footer{background:var(--navy); color:#cdd8ea; text-align:center; padding:22px 16px; font-size:.88rem;}
+  footer .gold{color:var(--gold); font-weight:700;}
+  .sec-head-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:4px;}
+  .ai-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .ai-label{font-size:.85rem; font-weight:700; color:var(--navy); margin-top:16px;}
+  .lock-note{background:#fff8e6; border:1px solid var(--gold); border-radius:10px; padding:10px 14px;
+    font-size:.82rem; color:#7c5e00; margin-top:8px;}
+</style>
+</head>
+<body>
+<a class="back-home" href="../">← 🏠 Beranda</a>
+
+<header class="top">
+  <h1>✍️ Sastra Edukasi <span class="gold">Prompter</span></h1>
+  <p>Generator prompt karya sastra pembelajaran — cerpen, dongeng, cerita lucu, puisi, pantun</p>
+  <span class="badge">Berjangkar TP • Materi terselip alami dalam karya</span>
+</header>
+
+<main>
+  <!-- 1. JENIS KARYA -->
+  <section class="card">
+    <h2><span class="num">1</span> Jenis Karya</h2>
+    <p class="desc">Pilih satu jenis karya sastra yang ingin dibuatkan prompt-nya.</p>
+    <div class="optgrid" id="jenisGrid">
+      <label class="opt"><input type="radio" name="jenis" value="cerpen" checked>
+        <span class="box"><span class="t">📖</span><span class="l">Cerpen Edukasi</span><span class="d">Materi terselip dalam alur</span></span></label>
+      <label class="opt"><input type="radio" name="jenis" value="dongeng">
+        <span class="box"><span class="t">🦁</span><span class="l">Dongeng / Fabel</span><span class="d">Tokoh hewan &amp; pesan moral</span></span></label>
+      <label class="opt"><input type="radio" name="jenis" value="lucu">
+        <span class="box"><span class="t">😂</span><span class="l">Cerita Lucu</span><span class="d">Humor kelas yang mendidik</span></span></label>
+      <label class="opt"><input type="radio" name="jenis" value="puisi">
+        <span class="box"><span class="t">🎭</span><span class="l">Puisi</span><span class="d">Bebas atau berima</span></span></label>
+      <label class="opt"><input type="radio" name="jenis" value="pantun">
+        <span class="box"><span class="t">🎋</span><span class="l">Pantun</span><span class="d">Pembuka / penutup pelajaran</span></span></label>
+    </div>
+  </section>
+
+  <!-- 2. KONTEKS -->
+  <section class="card">
+    <h2><span class="num">2</span> Konteks</h2>
+    <p class="desc">Tentang apa karya ini, dan untuk siapa.</p>
+    <div class="grid2">
+      <div>
+        <label class="f" for="fJudul">Ide / Tema / Judul <span class="req">*</span></label>
+        <input type="text" id="fJudul" placeholder="cth: Kiki dan Ember Ajaib">
+      </div>
+      <div>
+        <label class="f" for="fMapel">Mata pelajaran</label>
+        <select id="fMapel">
+          <option>Bahasa Indonesia</option>
+          <option>Matematika</option>
+          <option>IPA</option>
+          <option>IPS</option>
+          <option>PPKn</option>
+          <option>Bahasa Inggris</option>
+          <option>Seni</option>
+          <option>PJOK</option>
+          <option>Informatika</option>
+          <option>Umum</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fJenjang">Jenjang</label>
+        <select id="fJenjang">
+          <option>TK/PAUD</option>
+          <option selected>SD</option>
+          <option>SMP</option>
+          <option>SMA</option>
+          <option>SMK</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fKelas">Kelas</label>
+        <input type="text" id="fKelas" placeholder="cth: 4 / 7C / X-1">
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. JANGKAR -->
+  <section class="card">
+    <h2><span class="num">3</span> Jangkar</h2>
+    <p class="desc">Guru menetapkan dulu — AI dilarang mengubah makna bagian ini.</p>
+    <div>
+      <label class="f" for="fTP">TP / Tujuan Pembelajaran <span class="req">*</span></label>
+      <textarea id="fTP" placeholder="Tulis TP resmi dari guru, mis: Peserta didik dapat menjelaskan tahapan siklus air melalui cerita."></textarea>
+      <div class="lock-note">🔒 <b>TERKUNCI</b> — AI dilarang mengubah makna TP ini. Karya harus setia pada TP di atas.</div>
+    </div>
+    <div class="grid2" style="margin-top:14px">
+      <div>
+        <label class="f" for="fMateri">Materi yang disisipkan dalam karya</label>
+        <input type="text" id="fMateri" placeholder="cth: siklus air — evaporasi, kondensasi, presipitasi">
+      </div>
+      <div>
+        <label class="f" for="fMoral">Nilai / pesan moral <span class="hint" style="display:inline">(opsional)</span></label>
+        <input type="text" id="fMoral" placeholder="cth: berbagi itu membahagiakan">
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. OPSI PER JENIS -->
+  <section class="card">
+    <h2><span class="num">4</span> Opsi Karya</h2>
+    <p class="desc">Opsi berikut menyesuaikan jenis karya yang dipilih di Section 1.</p>
+
+    <div class="opsi-jenis active" data-jenis="cerpen">
+      <div class="opt-title">Panjang cerpen</div>
+      <div class="optgrid">
+        <label class="opt"><input type="radio" name="cPanjang" value="300"><span class="box"><span class="v">Pendek</span><span class="d">±300 kata</span></span></label>
+        <label class="opt"><input type="radio" name="cPanjang" value="600" checked><span class="box"><span class="v">Sedang</span><span class="d">±600 kata</span></span></label>
+        <label class="opt"><input type="radio" name="cPanjang" value="1000"><span class="box"><span class="v">Panjang</span><span class="d">±1000 kata</span></span></label>
+      </div>
+      <div class="opt-title">Sudut pandang</div>
+      <div class="optgrid">
+        <label class="opt"><input type="radio" name="cSudut" value="pertama"><span class="box"><span class="v">Orang pertama</span><span class="d">"Aku / saya"</span></span></label>
+        <label class="opt"><input type="radio" name="cSudut" value="ketiga" checked><span class="box"><span class="v">Orang ketiga</span><span class="d">"Ia / mereka"</span></span></label>
+      </div>
+      <div class="opt-title">Gaya bahasa</div>
+      <div class="optgrid">
+        <label class="opt"><input type="radio" name="cGaya" value="santai" checked><span class="box"><span class="v">Santai</span><span class="d">Hangat &amp; akrab</span></span></label>
+        <label class="opt"><input type="radio" name="cGaya" value="formal"><span class="box"><span class="v">Formal</span><span class="d">Baku &amp; rapi</span></span></label>
+      </div>
+    </div>
+
+    <div class="opsi-jenis" data-jenis="dongeng">
+      <div>
+        <label class="f" for="fTokoh">Tokoh utama <span class="req">*</span></label>
+        <input type="text" id="fTokoh" placeholder="cth: Kancil">
+      </div>
+      <div class="opt-title">Panjang dongeng</div>
+      <div class="optgrid">
+        <label class="opt"><input type="radio" name="dPanjang" value="200" checked><span class="box"><span class="v">Pendek</span><span class="d">±200 kata</span></span></label>
+        <label class="opt"><input type="radio" name="dPanjang" value="400"><span class="box"><span class="v">Sedang</span><span class="d">±400 kata</span></span></label>
+      </div>
+    </div>
+
+    <div class="opsi-jenis" data-jenis="lucu">
+      <div class="opt-title">Sumber tawa</div>
+      <div class="optgrid">
+        <label class="opt"><input type="radio" name="lSumber" value="situasi" checked><span class="box"><span class="v">Situasi</span><span class="d">Kejadian kocak</span></span></label>
+        <label class="opt"><input type="radio" name="lSumber" value="katakata"><span class="box"><span class="v">Permainan kata</span><span class="d">Plèsètan &amp; kelucuan bahasa</span></span></label>
+      </div>
+      <div class="opt-title">Panjang cerita</div>
+      <div class="optgrid">
+        <label class="opt"><input type="radio" name="lPanjang" value="150" checked><span class="box"><span class="v">Singkat</span><span class="d">±150 kata</span></span></label>
+        <label class="opt"><input type="radio" name="lPanjang" value="300"><span class="box"><span class="v">Sedang</span><span class="d">±300 kata</span></span></label>
+      </div>
+    </div>
+
+    <div class="opsi-jenis" data-jenis="puisi">
+      <div class="opt-title">Bentuk puisi</div>
+      <div class="optgrid">
+        <label class="opt"><input type="radio" name="pBentuk" value="bebas" checked><span class="box"><span class="v">Bebas</span><span class="d">Tanpa aturan rima</span></span></label>
+        <label class="opt"><input type="radio" name="pBentuk" value="berima"><span class="box"><span class="v">Berima</span><span class="d">Rima konsisten tiap bait</span></span></label>
+      </div>
+      <div style="margin-top:14px; max-width:220px">
+        <label class="f" for="fPBait">Jumlah bait (2–5)</label>
+        <input type="number" id="fPBait" min="2" max="5" value="3">
+      </div>
+    </div>
+
+    <div class="opsi-jenis" data-jenis="pantun">
+      <div class="opt-title">Posisi pantun</div>
+      <div class="optgrid">
+        <label class="opt"><input type="radio" name="nPosisi" value="pembuka" checked><span class="box"><span class="v">Pembuka pelajaran</span><span class="d">Sapaan &amp; semangat</span></span></label>
+        <label class="opt"><input type="radio" name="nPosisi" value="penutup"><span class="box"><span class="v">Penutup pelajaran</span><span class="d">Refleksi &amp; pesan</span></span></label>
+        <label class="opt"><input type="radio" name="nPosisi" value="umum"><span class="box"><span class="v">Umum</span><span class="d">Bebas konteks</span></span></label>
+      </div>
+      <div style="margin-top:14px; max-width:220px">
+        <label class="f" for="fNBait">Jumlah bait (1–3)</label>
+        <input type="number" id="fNBait" min="1" max="3" value="2">
+      </div>
+    </div>
+  </section>
+
+  <div class="center">
+    <button class="btn btn-primary gen-btn" id="btnGenerate" type="button">🪄 Generate Prompt</button>
+    <button class="btn btn-navy" id="btnSample" type="button">🎲 Contoh</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <section class="card" id="outputCard">
+    <h2><span class="num">✓</span> Prompt Siap Pakai</h2>
+    <p class="desc">Salin prompt di bawah lalu tempel ke AI favorit Bapak/Ibu, atau tekan salah satu tombol "Kirim ke AI".</p>
+    <div class="out-block">
+      <div class="block-label">📝 Prompt karya sastra</div>
+      <pre id="promptOut"></pre>
+      <div class="out-actions">
+        <button class="btn btn-navy btn-sm" id="btnCopy" type="button">📋 Salin</button>
+        <button class="btn btn-ghost btn-sm" id="btnDownload" type="button">⬇️ Unduh .md</button>
+        <button class="btn btn-ghost btn-sm" id="btnSave" type="button">💾 Simpan ke Pustaka</button>
+      </div>
+    </div>
+    <div class="ai-label">🚀 Kirim ke AI <span class="hint">— prompt otomatis tersalin, lalu situs AI terbuka di tab baru</span></div>
+    <div class="ai-row" id="aiRow"></div>
+  </section>
+
+  <!-- PUSTAKA -->
+  <section class="card">
+    <div class="sec-head-row">
+      <h2><span class="num">📚</span> Pustaka Saya</h2>
+      <div>
+        <button class="btn btn-ghost btn-sm" id="btnExport" type="button">⬆️ Ekspor JSON</button>
+        <button class="btn btn-ghost btn-sm" id="btnImport" type="button">⬇️ Impor JSON</button>
+        <input type="file" id="fileImport" accept="application/json" style="display:none">
+      </div>
+    </div>
+    <p class="desc">Semua prompt tersimpan otomatis di perangkat ini.</p>
+    <div id="libList"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="gold">✍️ Sastra Edukasi Prompter</div>
+  <div style="margin-top:6px">@2026 GezyTech Prompter. Dikembangkan oleh PakGun</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============ DATA ============ */
+const JENIS = {
+  cerpen:  {nama:"Cerpen Edukasi", header:"🎯 BUAT CERPEN EDUKASI"},
+  dongeng: {nama:"Dongeng / Fabel", header:"🎯 BUAT DONGENG / FABEL"},
+  lucu:    {nama:"Cerita Lucu", header:"🎯 BUAT CERITA LUCU"},
+  puisi:   {nama:"Puisi", header:"🎯 BUAT PUISI"},
+  pantun:  {nama:"Pantun", header:"🎯 BUAT PANTUN"}
+};
+const AI_LIST = [
+  {nama:"Muse", url:"https://muse.ai/"},
+  {nama:"ChatGPT", url:"https://chatgpt.com/"},
+  {nama:"Claude", url:"https://claude.ai/"},
+  {nama:"Gemini", url:"https://gemini.google.com/"},
+  {nama:"DeepSeek", url:"https://chat.deepseek.com/"},
+  {nama:"Grok", url:"https://grok.com/"},
+  {nama:"Copilot", url:"https://copilot.microsoft.com/"},
+  {nama:"Qwen", url:"https://chat.qwen.ai/"},
+  {nama:"Le Chat", url:"https://chat.mistral.ai/"},
+  {nama:"Perplexity", url:"https://www.perplexity.ai/"}
+];
+const TARGET = {
+  "TK/PAUD":"anak usia 4–6 tahun",
+  "SD":"anak SD",
+  "SMP":"remaja SMP (13–15 tahun)",
+  "SMA":"remaja SMA (16–18 tahun)",
+  "SMK":"remaja SMK (16–18 tahun)"
+};
+const BAHASA = {
+  "TK/PAUD":"Kalimat SANGAT pendek (maks 8 kata), kata konkret dari kehidupan sehari-hari, banyak pengulangan yang menyenangkan. Tanpa istilah abstrak.",
+  "SD":"Kalimat pendek (maks 12 kata), kosakata sederhana, boleh ada dialog antar tokoh yang hidup.",
+  "SMP":"Bahasa santai khas remaja, kalimat bervariasi, boleh ada humor ringan yang sopan.",
+  "SMA":"Bahasa baku yang luwes, boleh memakai istilah mapel asal dijelaskan lewat konteks, nada boleh reflektif.",
+  "SMK":"Bahasa baku yang luwes dan kontekstual dengan dunia kerja, istilah mapel dijelaskan lewat konteks."
+};
+const LS_KEY = "sastra_prompter_lib";
+
+/* ============ HELPERS ============ */
+const $ = id => document.getElementById(id);
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 2400);
+}
+function esc(s){ return String(s==null?"":s)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function radioVal(name){
+  const el = document.querySelector('input[name="'+name+'"]:checked');
+  return el ? el.value : "";
+}
+
+/* ============ JENIS -> PANEL OPSI ============ */
+function syncOpsi(){
+  const j = radioVal("jenis");
+  document.querySelectorAll(".opsi-jenis").forEach(p=>{
+    p.classList.toggle("active", p.getAttribute("data-jenis")===j);
+  });
+}
+
+/* ============ CONTOH ============ */
+function isiContoh(){
+  document.querySelector('input[name="jenis"][value="cerpen"]').checked = true;
+  syncOpsi();
+  $("fJudul").value = "Kiki dan Ember Ajaib";
+  $("fMapel").value = "IPA";
+  $("fJenjang").value = "SD";
+  $("fKelas").value = "4";
+  $("fTP").value = "Peserta didik dapat menjelaskan tahapan siklus air (evaporasi, kondensasi, presipitasi) melalui cerita.";
+  $("fMateri").value = "siklus air: evaporasi, kondensasi, presipitasi";
+  $("fMoral").value = "berbagi itu membahagiakan";
+  document.querySelector('input[name="cPanjang"][value="600"]').checked = true;
+  document.querySelector('input[name="cSudut"][value="ketiga"]').checked = true;
+  document.querySelector('input[name="cGaya"][value="santai"]').checked = true;
+  toast("Contoh terisi — silakan ubah lalu Generate");
+}
+
+/* ============ FORM ============ */
+function getForm(){
+  const val = id => $(id).value.trim();
+  const baitP = Math.max(2, Math.min(5, +val("fPBait") || 3));
+  const baitN = Math.max(1, Math.min(3, +val("fNBait") || 2));
+  $("fPBait").value = baitP; $("fNBait").value = baitN;
+  return {
+    jenis: radioVal("jenis"),
+    judul: val("fJudul"), mapel: val("fMapel"), jenjang: val("fJenjang"), kelas: val("fKelas"),
+    tp: val("fTP"), materi: val("fMateri"), moral: val("fMoral"),
+    tokoh: val("fTokoh"),
+    cPanjang: radioVal("cPanjang") || "600",
+    cSudut: radioVal("cSudut") || "ketiga",
+    cGaya: radioVal("cGaya") || "santai",
+    dPanjang: radioVal("dPanjang") || "200",
+    lSumber: radioVal("lSumber") || "situasi",
+    lPanjang: radioVal("lPanjang") || "150",
+    pBentuk: radioVal("pBentuk") || "bebas",
+    pBait: baitP,
+    nPosisi: radioVal("nPosisi") || "pembuka",
+    nBait: baitN
+  };
+}
+function validate(d){
+  let ok = true;
+  const checks = [["fJudul", d.judul], ["fTP", d.tp]];
+  if(d.jenis === "dongeng") checks.push(["fTokoh", d.tokoh]);
+  checks.forEach(([id, v])=>{
+    $(id).classList.toggle("invalid", !v); if(!v) ok = false;
+  });
+  if(!ok) toast("Lengkapi: ide/judul, TP" + (d.jenis==="dongeng" ? ", dan tokoh utama" : ""));
+  return ok;
+}
+
+/* ============ BANGUN PROMPT ============ */
+function buildPrompt(d){
+  const J = JENIS[d.jenis];
+  const L = [];
+  L.push(J.header);
+  L.push("");
+  L.push('"' + d.judul + '"');
+  L.push("");
+  L.push(d.mapel + " • " + d.jenjang + (d.kelas ? " Kelas " + d.kelas : ""));
+  L.push("");
+  L.push("Buatkan " + J.nama.toLowerCase() + " berbahasa Indonesia sesuai konfigurasi berikut.");
+  L.push("");
+  L.push("─── A. KONFIGURASI ───");
+  L.push("Jenis karya  : " + J.nama);
+  L.push("Judul/tema   : " + d.judul);
+  L.push("TP [TERKUNCI]: " + d.tp + " — JANGAN diubah maknanya; karya harus setia pada TP ini.");
+  if(d.materi) L.push("Materi       : " + d.materi + " — TERSELIP alami dalam alur karya, bukan ceramah.");
+  if(d.moral) L.push("Pesan moral   : " + d.moral);
+  L.push("Target       : " + (TARGET[d.jenjang] || d.jenjang));
+  const detail = opsiDetail(d);
+  detail.forEach(x => L.push(x[0] + " : " + x[1]));
+  L.push("");
+  L.push("─── B. STRUKTUR KARYA ───");
+  strukturKarya(d).forEach(x => L.push(x));
+  L.push("");
+  L.push("─── C. ATURAN BAHASA ───");
+  L.push(BAHASA[d.jenjang] || BAHASA["SD"]);
+  L.push("Materi pelajaran TERSELIP alami dalam peristiwa dan dialog tokoh — pembaca belajar tanpa merasa diceramahi.");
+  L.push("");
+  L.push("─── LARANGAN ───");
+  L.push("1. Dilarang menceramahi di tengah karya ('anak-anak harus...').");
+  L.push("2. Dilarang memakai kata sulit tanpa konteks yang menjelaskannya.");
+  L.push("3. Dilarang mengubah nama/sifat tokoh di tengah jalan.");
+  L.push(d.jenis === "pantun"
+    ? "4. Khusus pantun: DILARANG membuat sampiran yang nyambung secara logis ke isi — sampiran dan isi harus terpisah."
+    : "4. Dilarang menambah materi di luar TP dan materi yang ditetapkan di atas.");
+  return L.join("\n");
+}
+function opsiDetail(d){
+  const R = [];
+  if(d.jenis === "cerpen"){
+    R.push(["Panjang", "±" + d.cPanjang + " kata"]);
+    R.push(["Sudut pandang", d.cSudut === "pertama" ? "Orang pertama (aku/saya)" : "Orang ketiga (ia/mereka)"]);
+    R.push(["Gaya bahasa", d.cGaya === "santai" ? "Santai, hangat, akrab" : "Formal, baku, rapi"]);
+  } else if(d.jenis === "dongeng"){
+    R.push(["Tokoh utama", d.tokoh]);
+    R.push(["Panjang", "±" + d.dPanjang + " kata"]);
+  } else if(d.jenis === "lucu"){
+    R.push(["Sumber tawa", d.lSumber === "situasi" ? "Situasi kocak" : "Permainan kata"]);
+    R.push(["Panjang", "±" + d.lPanjang + " kata"]);
+  } else if(d.jenis === "puisi"){
+    R.push(["Bentuk", d.pBentuk === "bebas" ? "Puisi bebas" : "Puisi berima"]);
+    R.push(["Jumlah bait", d.pBait + " bait"]);
+  } else if(d.jenis === "pantun"){
+    const pos = {pembuka:"Pembuka pelajaran", penutup:"Penutup pelajaran", umum:"Umum"}[d.nPosisi] || d.nPosisi;
+    R.push(["Posisi", pos]);
+    R.push(["Jumlah bait", d.nBait + " bait"]);
+  }
+  return R;
+}
+function strukturKarya(d){
+  const S = [];
+  if(d.jenis === "cerpen"){
+    S.push("Bangun cerpen dengan alur ORIENTASI → KOMPLIKASI → RESOLUSI:");
+    S.push("• ORIENTASI: perkenalkan tokoh, latar, dan suasana.");
+    S.push("• KOMPLIKASI: muncul masalah yang berkaitan dengan materi (" + (d.materi || "topik pelajaran") + ").");
+    S.push("• RESOLUSI: masalah selesai lewat tindakan tokoh; " + (d.moral ? "tegaskan pesan moral (" + d.moral + ") secara halus di akhir." : "tutup dengan akhir yang memuaskan."));
+    S.push("Panjang total ±" + d.cPanjang + " kata.");
+  } else if(d.jenis === "dongeng"){
+    S.push("Bangun dongeng/fabel dengan alur PEMBUKA → MASALAH → BANTUAN → PENUTUP:");
+    S.push("• PEMBUKA: perkenalkan " + d.tokoh + " dan dunianya.");
+    S.push("• MASALAH: " + d.tokoh + " menghadapi masalah yang berkaitan dengan materi (" + (d.materi || "topik pelajaran") + ").");
+    S.push("• BANTUAN: masalah teratasi lewat kecerdikan/kebaikan, bukan kekerasan.");
+    S.push("• PENUTUP: akhir hangat; " + (d.moral ? "pesan moral (" + d.moral + ") terasa dari kejadian, bukan diceramahkan." : "tutup dengan kesan baik."));
+    S.push("Panjang total ±" + d.dPanjang + " kata.");
+  } else if(d.jenis === "lucu"){
+    S.push("Bangun cerita lucu dengan pola SETUP → KEJUTAN:");
+    S.push("• SETUP: situasi normal sehari-hari yang berkaitan dengan materi (" + (d.materi || "topik pelajaran") + ").");
+    S.push("• KEJUTAN: punchline tak terduga dari " + (d.lSumber === "situasi" ? "situasi kocak" : "permainan kata/plèsètan") + ".");
+    S.push("Humor harus sopan: tidak mengejek, tidak menyinggung SARA, tidak merendahkan siapa pun.");
+    S.push("Panjang total ±" + d.lPanjang + " kata.");
+  } else if(d.jenis === "puisi"){
+    S.push("Tulis puisi " + (d.pBentuk === "bebas" ? "bebas" : "berima") + " sebanyak " + d.pBait + " bait tentang \"" + d.judul + "\".");
+    S.push("Setiap bait terdiri dari 4 baris yang padat makna.");
+    if(d.pBentuk === "berima") S.push("Gunakan rima yang konsisten (a-a-a-a atau a-b-a-b) di setiap bait.");
+    else S.push("Tanpa aturan rima, tetapi jaga irama dan pilihan kata yang indah.");
+    if(d.materi) S.push("Selipkan nuansa materi (" + d.materi + ") lewat citraan, bukan penjelasan.");
+  } else if(d.jenis === "pantun"){
+    const pos = {pembuka:"pembuka pelajaran", penutup:"penutup pelajaran", umum:"umum"}[d.nPosisi] || d.nPosisi;
+    S.push("ATURAN KHUSUS PANTUN — wajib dipatuhi:");
+    S.push("• Setiap bait terdiri dari 4 baris: baris 1–2 adalah SAMPIRAN, baris 3–4 adalah ISI.");
+    S.push("• Rima akhir baris berpola a-b-a-b atau a-a-a-a.");
+    S.push("• Setiap baris 8–12 suku kata.");
+    S.push("• Sampiran memakai citraan alam/keseharian yang indah dan TIDAK nyambung logis dengan isi.");
+    S.push("Buat " + d.nBait + " bait pantun " + pos + " bertema \"" + d.judul + "\"" + (d.materi ? " yang menyisipkan materi (" + d.materi + ")" : "") + ".");
+    if(d.nPosisi === "pembuka") S.push("Nada: sapaan hangat dan penyemangat belajar.");
+    if(d.nPosisi === "penutup") S.push("Nada: reflektif, menutup pelajaran dengan kesan baik.");
+  }
+  return S;
+}
+
+/* ============ GENERATE & OUTPUT ============ */
+let lastPrompt = "", lastData = null;
+function doGenerate(){
+  const d = getForm();
+  if(!validate(d)) return;
+  lastData = d;
+  lastPrompt = buildPrompt(d);
+  $("promptOut").textContent = lastPrompt;
+  $("outputCard").classList.add("show");
+  const oc = $("outputCard");
+  if(oc.scrollIntoView) oc.scrollIntoView({behavior:"smooth", block:"start"});
+  toast("Prompt berhasil dibuat 🪄");
+}
+function copyText(t){
+  if(!t){ toast("Generate dulu"); return; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>toast("Tersalin 📋")).catch(()=>fallbackCopy(t));
+  } else fallbackCopy(t);
+}
+function fallbackCopy(t){
+  const ta = document.createElement("textarea");
+  ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toast("Tersalin 📋"); }
+  catch(e){ toast("Gagal menyalin"); }
+  document.body.removeChild(ta);
+}
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60) || "sastra"; }
+function doDownload(){
+  if(!lastPrompt){ toast("Generate dulu"); return; }
+  const md = "# " + lastData.judul + "\n\n```\n" + lastPrompt + "\n```\n";
+  const blob = new Blob([md], {type:"text/markdown;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = slug(lastData.judul) + ".md";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("File .md diunduh ⬇️");
+}
+
+/* ============ AI BUTTONS ============ */
+function renderAIRows(){
+  $("aiRow").innerHTML = AI_LIST.map((a,i)=>
+    '<button class="btn btn-ghost btn-sm" type="button" data-ai="'+i+'">🚀 '+a.nama+'</button>').join("");
+  $("aiRow").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    const ai = AI_LIST[+b.getAttribute("data-ai")];
+    copyText(lastPrompt);
+    window.open(ai.url, "_blank", "noopener");
+    toast("Membuka "+ai.nama+" — prompt tersalin 📋");
+  }));
+}
+
+/* ============ PUSTAKA ============ */
+function loadLib(){
+  try{ const raw = localStorage.getItem(LS_KEY); const arr = raw ? JSON.parse(raw) : []; return Array.isArray(arr) ? arr : []; }
+  catch(e){ return []; }
+}
+function saveLib(arr){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(arr)); return true; }
+  catch(e){ toast("Penyimpanan penuh / tidak tersedia"); return false; }
+}
+function doSave(){
+  if(!lastData){ toast("Generate dulu"); return; }
+  const d = lastData, lib = loadLib();
+  lib.unshift({id:"s"+Date.now().toString(36), judul:d.judul, jenis:JENIS[d.jenis].nama,
+    mapel:d.mapel, jenjang:d.jenjang, ts:Date.now(), prompt:lastPrompt});
+  if(saveLib(lib)){ renderLib(); toast("Tersimpan di Pustaka 💾"); }
+}
+function renderLib(){
+  const lib = loadLib(), wrap = $("libList");
+  if(!lib.length){
+    wrap.innerHTML = '<div class="empty-lib">📭 Belum ada prompt tersimpan.<br>Generate lalu tekan <b>💾 Simpan ke Pustaka</b>.</div>';
+    return;
+  }
+  wrap.innerHTML = lib.map(it=>{
+    const tgl = new Date(it.ts).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"});
+    return '<div class="lib-item"><div class="meta"><div class="jt">'+esc(it.judul)+'</div>'+
+      '<div class="js">'+esc(it.jenis||"")+' • '+esc(it.mapel||"")+' '+esc(it.jenjang||"")+' • '+tgl+'</div></div>'+
+      '<div class="acts">'+
+      '<button class="btn btn-navy btn-sm" data-act="view" data-id="'+it.id+'">👁️ Lihat</button>'+
+      '<button class="btn btn-ghost btn-sm" data-act="dl" data-id="'+it.id+'">⬇️</button>'+
+      '<button class="btn btn-danger btn-sm" data-act="del" data-id="'+it.id+'">🗑️</button>'+
+      '</div></div>';
+  }).join("");
+  wrap.querySelectorAll("button[data-act]").forEach(b=>b.addEventListener("click",()=>{
+    const id = b.getAttribute("data-id"), act = b.getAttribute("data-act");
+    const it = loadLib().find(x=>x.id===id); if(!it) return;
+    if(act==="view"){
+      lastPrompt = it.prompt; lastData = {judul: it.judul};
+      $("promptOut").textContent = it.prompt;
+      $("outputCard").classList.add("show");
+      const oc = $("outputCard");
+      if(oc.scrollIntoView) oc.scrollIntoView({behavior:"smooth", block:"start"});
+    }
+    else if(act==="dl"){
+      const md = "# "+it.judul+"\n\n```\n"+it.prompt+"\n```\n";
+      const blob = new Blob([md], {type:"text/markdown;charset=utf-8"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = slug(it.judul) + ".md";
+      document.body.appendChild(a); a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+    else if(act==="del"){ if(confirm("Hapus prompt ini?")){ saveLib(loadLib().filter(x=>x.id!==id)); renderLib(); } }
+  }));
+}
+function doExport(){
+  const lib = loadLib();
+  if(!lib.length){ toast("Pustaka masih kosong"); return; }
+  const blob = new Blob([JSON.stringify(lib,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "pustaka-sastra-prompter.json";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("Pustaka diekspor ⬆️");
+}
+function doImport(file){
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const arr = JSON.parse(r.result);
+      if(!Array.isArray(arr)) throw new Error("format salah");
+      const cur = loadLib(), ids = new Set(cur.map(x=>x.id));
+      let n = 0;
+      arr.forEach(it=>{ if(it && it.prompt && !ids.has(it.id)){ cur.push(it); n++; } });
+      cur.sort((a,b)=>(b.ts||0)-(a.ts||0));
+      if(saveLib(cur)){ renderLib(); toast(n + " prompt diimpor ⬇️"); }
+    }catch(e){ toast("File tidak valid"); }
+  };
+  r.readAsText(file);
+}
+
+/* ============ INIT ============ */
+document.addEventListener("DOMContentLoaded", ()=>{
+  renderAIRows(); renderLib(); syncOpsi();
+  document.querySelectorAll('input[name="jenis"]').forEach(r=>
+    r.addEventListener("change", syncOpsi));
+  $("btnSample").addEventListener("click", isiContoh);
+  $("btnGenerate").addEventListener("click", doGenerate);
+  $("btnCopy").addEventListener("click", ()=>copyText(lastPrompt));
+  $("btnDownload").addEventListener("click", doDownload);
+  $("btnSave").addEventListener("click", doSave);
+  $("btnExport").addEventListener("click", doExport);
+  $("btnImport").addEventListener("click", ()=>$("fileImport").click());
+  $("fileImport").addEventListener("change", e=>{ if(e.target.files[0]) doImport(e.target.files[0]); e.target.value=""; });
+});
+</script>
+</body>
+</html>
