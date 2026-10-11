@@ -120,9 +120,14 @@
   .dd-item small{display:block; color:var(--muted); font-size:.76rem;}
   .ai-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
   .ai-label{font-size:.85rem; font-weight:700; color:var(--navy); margin-top:16px;}
+  .back-home{position:fixed; top:14px; left:14px; z-index:100; display:inline-flex; align-items:center; gap:6px;
+    background:rgba(27,42,74,.94); color:#fff; text-decoration:none; font-size:.85rem; font-weight:700;
+    padding:9px 15px; border-radius:999px; border:1px solid rgba(245,179,1,.55); box-shadow:0 4px 14px rgba(0,0,0,.25); transition:.15s;}
+  .back-home:hover{background:var(--gold); color:var(--navy); border-color:var(--gold);}
 </style>
 </head>
 <body>
+<a class="back-home" href="../">← 🏠 Beranda</a>
 
 <header class="top">
   <h1>🎯 MPI <span class="gold">Prompter</span></h1>
