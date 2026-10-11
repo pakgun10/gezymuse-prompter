@@ -222,9 +222,12 @@
   <section class="card">
     <div class="sec-head-row">
       <h2><span class="num">5</span> Naskah per Adegan</h2>
-      <button class="btn btn-ghost btn-sm" id="btnSyncScenes" type="button">🔄 Sesuaikan daftar adegan</button>
+      <div>
+        <button class="btn btn-navy btn-sm" id="btnDrafNaskah" type="button">✨ Buatkan draf naskah</button>
+        <button class="btn btn-ghost btn-sm" id="btnSyncScenes" type="button">🔄 Sesuaikan daftar adegan</button>
+      </div>
     </div>
-    <p class="desc">Tulis <b>visual dalam bahasa Inggris</b> dan <b>dialog dalam bahasa Indonesia</b>. Kosongkan dialog bila adegan tanpa suara.</p>
+    <p class="desc">Tulis <b>visual dalam bahasa Inggris</b> dan <b>dialog dalam bahasa Indonesia</b>. Kosongkan dialog bila adegan tanpa suara.<br>Kesulitan mulai dari nol? Klik <b>✨ Buatkan draf naskah</b> — adegan terisi otomatis mengikuti alur pembuka → isi → penutup, tinggal edit.</p>
     <div id="sceneList"></div>
     <button class="btn btn-ghost btn-sm" id="btnAddScene" type="button">＋ Tambah adegan</button>
   </section>
@@ -396,6 +399,53 @@ function getScenes(){
     dialog: r.querySelector(".sDialog").value.trim(),
     durasi: Math.max(3, Math.min(60, +r.querySelector(".sDur").value || 10))
   }));
+}
+/* Draf naskah otomatis: pembuka → isi → penutup. Visual EN + dialog ID,
+   memakai nama karakter yg sudah diisi dan poin-poin dari pesan/materi. */
+function buatDrafNaskah(){
+  const judul = $("fJudul").value.trim();
+  const pesan = $("fPesan").value.trim();
+  const chars = getChars();
+  if(!judul && !pesan){ toast("Isi dulu Judul dan Pesan/Materi di Bagian 1"); return; }
+  const n = Math.max(2, Math.min(20, +$("fJmlAdegan").value || 4));
+  const dur = Math.max(3, Math.min(60, +$("fDurasi").value || 10));
+  const P = chars.length ? chars[0].nama : "Guru";
+  const Q = chars.length > 1 ? chars[1].nama : null;
+  const topik = judul || "materi ini";
+  const poin = pesan.split(/\r?\n|[.?!]\s+/).map(s=>s.trim().replace(/[.?!]+$/,"")).filter(s=>s.length>4);
+
+  const Vbuka = P + " waving cheerfully at the camera in a bright Indonesian classroom, morning sunlight streaming through windows, colorful learning posters on the wall, camera slowly pushing in";
+  const Vtutup = (Q ? P + " and " + Q + " giving thumbs up together" : P + " giving a warm thumbs up") + " in the bright classroom, paper shapes floating gently like confetti, joyful celebration mood";
+  const Visi = [
+    P + " standing next to a large whiteboard, holding a pointer stick, explaining enthusiastically while students listen attentively, warm classroom lighting",
+    "close-up of concrete learning objects on a wooden desk demonstrating the lesson, " + P + "'s hand pointing at them, shallow depth of field, bright cheerful mood",
+    (Q ? Q + " raising hand eagerly while " + P + " smiles encouragingly, classroom background slightly blurred" : P + " smiling encouragingly at the camera, gesturing invitingly, classroom background slightly blurred")
+  ];
+  const Disi = [
+    pk => P + ': "' + pk + '. Ingat-ingat ya, teman-teman!"',
+    pk => P + ': "Nah, perhatikan contoh ini: ' + pk + '."',
+    pk => Q ? Q + ': "Oh! Jadi ' + pk + '!" ' + P + ': "Betul sekali! Hebat!"'
+            : P + ': "Sekarang coba pikirkan: ' + pk + '. Pasti bisa!"'
+  ];
+
+  const scenes = [{visual: Vbuka,
+    dialog: P + ': "Hai teman-teman! Hari ini kita belajar tentang ' + topik + '. Siapa yang sudah penasaran? Ayo mulai!"',
+    durasi: dur}];
+  const nIsi = Math.max(1, n - 2);
+  for(let i=0;i<nIsi;i++){
+    const pk = poin.length ? poin[i % poin.length] : ("bagian penting dari " + topik);
+    scenes.push({visual: Visi[i % Visi.length], dialog: Disi[i % Disi.length](pk), durasi: dur});
+  }
+  scenes.push({visual: Vtutup,
+    dialog: P + ': "Nah, sekarang kalian sudah paham tentang ' + topik + '. Terus berlatih ya, kalian hebat!"',
+    durasi: dur});
+
+  const ada = getScenes().some(s=>s.visual || s.dialog);
+  if(ada && !confirm("Ganti seluruh daftar adegan dengan draf otomatis (" + n + " adegan)? Naskah yang sudah ditulis akan terhapus.")) return;
+  $("sceneList").innerHTML = "";
+  scenes.forEach(s=>$("sceneList").appendChild(sceneRow(s.visual, s.dialog, s.durasi)));
+  renumber();
+  toast("Draf " + n + " adegan dibuat ✨ — silakan edit seperlunya");
 }
 function updateTotal(){
   const n = Math.max(1, Math.min(20, +$("fJmlAdegan").value || 1));
@@ -644,6 +694,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("fJmlAdegan").addEventListener("input", updateTotal);
   $("fDurasi").addEventListener("input", updateTotal);
   $("btnSyncScenes").addEventListener("click", ()=>{ syncScenes(); toast("Daftar adegan disesuaikan 🔄"); });
+  $("btnDrafNaskah").addEventListener("click", buatDrafNaskah);
   $("btnAddChar").addEventListener("click", ()=>$("charList").appendChild(charRow()));
   $("btnAddScene").addEventListener("click", ()=>{ $("sceneList").appendChild(sceneRow()); renumber(); });
   $("btnSample").addEventListener("click", isiContoh);
