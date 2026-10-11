@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Prompter — Generator Prompt Video per Adegan</title>
+<style>
+  :root{
+    --navy:#1B2A4A; --navy2:#243b63; --gold:#F5B301; --gold2:#d99e00;
+    --bg:#F4F6FB; --card:#ffffff; --ink:#1e2a3a; --muted:#6b7a90;
+    --line:#e3e9f2; --green:#22c55e; --red:#ef4444; --radius:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.55;}
+  header.top{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 70%,#2f4a7d 100%);
+    color:#fff; padding:34px 20px 30px; text-align:center; position:sticky; top:0; z-index:50;
+    box-shadow:0 4px 18px rgba(27,42,74,.35);}
+  header.top h1{font-size:clamp(1.6rem,4vw,2.4rem); letter-spacing:.5px;}
+  header.top h1 .gold{color:var(--gold);}
+  header.top p{opacity:.88; margin-top:6px; font-size:clamp(.85rem,2.4vw,1rem);}
+  .badge{display:inline-block; background:rgba(245,179,1,.16); border:1px solid var(--gold);
+    color:var(--gold); font-size:.75rem; padding:3px 12px; border-radius:999px; margin-top:10px;}
+  main{max-width:980px; margin:0 auto; padding:24px 16px 90px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px; margin-bottom:20px; box-shadow:0 2px 10px rgba(27,42,74,.06);}
+  .card h2{font-size:1.15rem; color:var(--navy); margin-bottom:4px; display:flex; align-items:center; gap:8px;}
+  .card h2 .num{background:var(--navy); color:#fff; width:28px; height:28px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; flex:none;}
+  .card .desc{color:var(--muted); font-size:.88rem; margin-bottom:16px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+  @media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr;}}
+  label.f{display:block; font-weight:600; font-size:.88rem; margin-bottom:6px; color:var(--navy);}
+  label.f .req{color:var(--red);}
+  .hint{font-size:.78rem; color:var(--muted); margin-top:4px;}
+  input[type=text],input[type=number],select,textarea{
+    width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:.95rem; font-family:inherit; background:#fff; color:var(--ink);}
+  input:focus,select:focus,textarea:focus{outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(27,42,74,.12);}
+  textarea{min-height:70px; resize:vertical;}
+  input.invalid,select.invalid,textarea.invalid{border-color:var(--red); box-shadow:0 0 0 3px rgba(239,68,68,.12);}
+  .checks{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  @media(max-width:560px){.checks{grid-template-columns:1fr;}}
+  .chk{display:flex; gap:10px; align-items:flex-start; background:#f8fafd; border:1px solid var(--line);
+    border-radius:10px; padding:10px 12px; cursor:pointer; font-size:.88rem;}
+  .chk input{margin-top:3px; width:17px; height:17px; accent-color:var(--navy); flex:none;}
+  .chk small{display:block; color:var(--muted); font-size:.78rem;}
+  .chk .rec{display:inline-block; background:#dcfce7; color:#166534; font-size:.68rem; font-weight:700;
+    border-radius:999px; padding:1px 8px; margin-left:6px;}
+  .btn{display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; font-family:inherit;
+    font-weight:700; border-radius:12px; padding:13px 26px; font-size:1rem; transition:.15s;}
+  .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--navy); box-shadow:0 4px 14px rgba(245,179,1,.4);}
+  .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(245,179,1,.5);}
+  .btn-navy{background:var(--navy); color:#fff;}
+  .btn-navy:hover{background:var(--navy2);}
+  .btn-ghost{background:#fff; color:var(--navy); border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--navy);}
+  .btn-sm{padding:8px 14px; font-size:.85rem; border-radius:9px;}
+  .btn-danger{background:#fee2e2; color:#b91c1c; border:1px solid #fecaca;}
+  .center{text-align:center; margin:26px 0 8px;}
+  .gen-btn{font-size:1.15rem; padding:16px 44px;}
+  #outputCard{display:none;}
+  #outputCard.show{display:block; animation:fadeUp .35s ease;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(12px);}to{opacity:1; transform:none;}}
+  .scene-out{border:1px solid var(--line); border-radius:12px; margin-bottom:14px; overflow:hidden;}
+  .scene-out .sh{background:var(--navy); color:#fff; padding:10px 16px; font-weight:700; font-size:.95rem;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;}
+  .scene-out .sh .dur{background:rgba(245,179,1,.2); color:var(--gold); font-size:.75rem; padding:2px 10px; border-radius:999px;}
+  .scene-out .sb{padding:14px 16px;}
+  .block-label{font-size:.78rem; font-weight:700; color:var(--navy); margin:10px 0 4px; text-transform:uppercase; letter-spacing:.4px;}
+  .block-label:first-child{margin-top:0;}
+  .prompt-box{background:#0f1b30; color:#dbe7ff; border-radius:10px; padding:12px 14px; font-size:.83rem;
+    line-height:1.6; white-space:pre-wrap; word-wrap:break-word; font-family:"Cascadia Code",Consolas,"Courier New",monospace;}
+  .dialog-box{background:#fffbeb; border:1px solid #fde68a; color:#92400e; border-radius:10px; padding:12px 14px; font-size:.88rem; white-space:pre-wrap;}
+  .neg-box{background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:10px; padding:10px 14px; font-size:.82rem;}
+  .copy-row{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
+  .tips{background:#eef3fb; border:1px solid #c9d8f2; border-radius:12px; padding:14px 18px; margin-bottom:16px; font-size:.88rem;}
+  .tips b{color:var(--navy);}
+  .tips ul{margin:6px 0 0 18px;}
+  .tips li{margin:3px 0;}
+  .out-actions{display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 4px;}
+  .lib-item{border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:10px;
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:#fbfcff;}
+  .lib-item .meta{flex:1; min-width:200px;}
+  .lib-item .meta .jt{font-weight:700; color:var(--navy);}
+  .lib-item .meta .js{font-size:.8rem; color:var(--muted);}
+  .lib-item .acts{display:flex; gap:6px; flex-wrap:wrap;}
+  .empty-lib{text-align:center; color:var(--muted); padding:26px 10px; font-size:.9rem;}
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+    background:var(--navy); color:#fff; padding:12px 22px; border-radius:999px; font-size:.9rem;
+    opacity:0; transition:.25s; z-index:200; box-shadow:0 6px 20px rgba(0,0,0,.25); pointer-events:none;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  footer{background:var(--navy); color:#cdd8ea; text-align:center; padding:22px 16px; font-size:.88rem;}
+  footer .gold{color:var(--gold); font-weight:700;}
+  .sample-link{background:none; border:none; color:var(--navy); font-size:.82rem; cursor:pointer;
+    text-decoration:underline; font-family:inherit; padding:0;}
+  .sec-head-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:4px;}
+  .char-row,.scene-row{border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:10px; background:#fbfcff; position:relative;}
+  .char-row .del,.scene-row .del{position:absolute; top:8px; right:8px;}
+  .plat-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .ai-label{font-size:.85rem; font-weight:700; color:var(--navy); margin-top:16px;}
+  .total-bar{background:var(--navy); color:#fff; border-radius:10px; padding:10px 16px; font-size:.9rem;
+    display:flex; gap:18px; flex-wrap:wrap; margin-bottom:16px;}
+  .total-bar b{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>🎬 Video <span class="gold">Prompter</span></h1>
+  <p>Generator prompt video pembelajaran per adegan — untuk Google Flow, Kling AI, dan lainnya</p>
+  <span class="badge">Tulis naskah per adegan → Generate → Prompt siap tempel per platform</span>
+</header>
+
+<main>
+  <!-- 1. KONSEP -->
+  <section class="card">
+    <div class="sec-head-row">
+      <h2><span class="num">1</span> Konsep Video</h2>
+      <button class="sample-link" id="btnSample" type="button">✨ isi contoh cepat</button>
+    </div>
+    <p class="desc">Gambaran besar videonya.</p>
+    <div class="grid2">
+      <div>
+        <label class="f" for="fJudul">Judul video <span class="req">*</span></label>
+        <input type="text" id="fJudul" placeholder="cth: Penjumlahan Pecahan — Bagian 1">
+      </div>
+      <div>
+        <label class="f" for="fTarget">Target penonton</label>
+        <select id="fTarget">
+          <option>Anak PAUD (4–6 tahun)</option>
+          <option selected>Anak SD (7–12 tahun)</option>
+          <option>Remaja SMP (13–15 tahun)</option>
+          <option>Remaja SMA/SMK (16–18 tahun)</option>
+          <option>Umum / Guru</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <label class="f" for="fPesan">Pesan / materi video</label>
+      <textarea id="fPesan" placeholder="cth: Pecahan berpenyebut sama dijumlahkan dengan menjumlahkan pembilangnya; penyebut tetap. Contoh: 1/5 + 2/5 = 3/5."></textarea>
+    </div>
+    <div class="grid3" style="margin-top:14px">
+      <div>
+        <label class="f" for="fJmlAdegan">Jumlah adegan</label>
+        <input type="number" id="fJmlAdegan" min="1" max="20" value="7">
+      </div>
+      <div>
+        <label class="f" for="fDurasi">Durasi per adegan (detik)</label>
+        <input type="number" id="fDurasi" min="3" max="60" value="10">
+      </div>
+      <div>
+        <label class="f">Total durasi</label>
+        <div id="totalDurasi" style="padding:11px 13px; background:#eef3fb; border-radius:10px; font-weight:700; color:var(--navy)">70 detik</div>
+      </div>
+    </div>
+    <div class="hint">Ubah jumlah adegan lalu tekan "🔄 Sesuaikan daftar adegan" di Bagian 5.</div>
+  </section>
+
+  <!-- 2. PLATFORM -->
+  <section class="card">
+    <h2><span class="num">2</span> Platform Video AI</h2>
+    <p class="desc">Pilih targetnya — tips pemakaian tiap platform ikut dimunculkan di hasil.</p>
+    <div class="checks" id="platChecks"></div>
+  </section>
+
+  <!-- 3. KARAKTER -->
+  <section class="card">
+    <h2><span class="num">3</span> Karakter</h2>
+    <p class="desc">Daftarkan tokohnya dengan deskripsi visual <b>bahasa Inggris</b> yang konsisten — dipakai di semua adegan agar wajah &amp; pakaian tidak berubah-ubah.</p>
+    <div id="charList"></div>
+    <button class="btn btn-ghost btn-sm" id="btnAddChar" type="button">＋ Tambah karakter</button>
+  </section>
+
+  <!-- 4. GAYA & ATURAN -->
+  <section class="card">
+    <h2><span class="num">4</span> Gaya Visual &amp; Aturan Prompt</h2>
+    <p class="desc">Konvensi yang terbukti lolos filter dan enak diedit.</p>
+    <div class="grid2">
+      <div>
+        <label class="f" for="fGaya">Gaya visual</label>
+        <select id="fGaya">
+          <option value="3d">Animasi 3D kartun ceria (aman filter)</option>
+          <option value="pixar">3D ala Pixar, sinematik</option>
+          <option value="anime">Anime 2D</option>
+          <option value="clay">Claymation / stop-motion</option>
+          <option value="whiteboard">Whiteboard animation</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fRasio">Rasio video</label>
+        <select id="fRasio">
+          <option value="16:9">16:9 — YouTube / TV</option>
+          <option value="9:16">9:16 — Reels / TikTok / Shorts</option>
+          <option value="1:1">1:1 — Feed sosmed</option>
+        </select>
+      </div>
+    </div>
+    <div class="checks" style="margin-top:14px">
+      <label class="chk"><input type="checkbox" id="rEn" checked disabled>
+        <span><b>Visual prompt bahasa Inggris</b><small>AI video membaca istilah kamera lebih akurat</small></span></label>
+      <label class="chk"><input type="checkbox" id="rId" checked disabled>
+        <span><b>Dialog bahasa Indonesia ("...")</b><small>Dialog ditulis dalam tanda kutip</small></span></label>
+      <label class="chk"><input type="checkbox" id="rNoText" checked>
+        <span><b>"no text, no subtitles"</b><small>Teks ditambahkan manual saat editing (Veo rawan belepotan)</small></span></label>
+      <label class="chk"><input type="checkbox" id="rNoAge" checked>
+        <span><b>Tanpa usia eksplisit</b><small>Deskripsi anak tanpa angka usia agar lolos filter keamanan</small></span></label>
+      <label class="chk"><input type="checkbox" id="rConsistent" checked>
+        <span><b>Konsistensi karakter</b><small>Deskripsi visual karakter diulang identik tiap adegan</small></span></label>
+      <label class="chk"><input type="checkbox" id="rNeg" checked>
+        <span><b>Sertakan negative prompt</b><small>Untuk kolom negative prompt (Kling, Hailuo, Luma)</small></span></label>
+    </div>
+  </section>
+
+  <!-- 5. NASKAH ADEGAN -->
+  <section class="card">
+    <div class="sec-head-row">
+      <h2><span class="num">5</span> Naskah per Adegan</h2>
+      <button class="btn btn-ghost btn-sm" id="btnSyncScenes" type="button">🔄 Sesuaikan daftar adegan</button>
+    </div>
+    <p class="desc">Tulis <b>visual dalam bahasa Inggris</b> dan <b>dialog dalam bahasa Indonesia</b>. Kosongkan dialog bila adegan tanpa suara.</p>
+    <div id="sceneList"></div>
+    <button class="btn btn-ghost btn-sm" id="btnAddScene" type="button">＋ Tambah adegan</button>
+  </section>
+
+  <div class="center">
+    <button class="btn btn-primary gen-btn" id="btnGenerate" type="button">⚡ Generate Prompt Video</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <section class="card" id="outputCard">
+    <h2><span class="num">✓</span> Prompt Video Siap Pakai</h2>
+    <p class="desc">Salin per blok ke kolom yang sesuai di platform videomu.</p>
+    <div id="tipsBox"></div>
+    <div class="total-bar" id="sumBar"></div>
+    <div id="sceneOut"></div>
+    <div class="out-actions">
+      <button class="btn btn-navy btn-sm" id="btnCopyAll" type="button">📋 Salin Semua</button>
+      <button class="btn btn-ghost btn-sm" id="btnSave" type="button">💾 Simpan ke Pustaka</button>
+      <button class="btn btn-ghost btn-sm" id="btnDownload" type="button">⬇️ Unduh .md</button>
+    </div>
+    <div class="ai-label">🚀 Buka platform video AI</div>
+    <div class="plat-row" id="platRow"></div>
+  </section>
+
+  <!-- PUSTAKA -->
+  <section class="card">
+    <div class="sec-head-row">
+      <h2><span class="num">📚</span> Pustaka Proyek Saya</h2>
+      <div>
+        <button class="btn btn-ghost btn-sm" id="btnExport" type="button">⬆️ Ekspor JSON</button>
+        <button class="btn btn-ghost btn-sm" id="btnImport" type="button">⬇️ Impor JSON</button>
+        <input type="file" id="fileImport" accept="application/json" style="display:none">
+      </div>
+    </div>
+    <p class="desc">Proyek video tersimpan otomatis di perangkat ini — naskah adeganmu tidak hilang walau aplikasi ditutup.</p>
+    <div id="libList"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="gold">🎬 Video Prompter</div>
+  <div style="margin-top:6px">@2026 GezyTech Prompter. Dikembangkan oleh PakGun</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============ DATA ============ */
+const PLATFORMS = [
+  {id:"flow", nama:"Google Flow", url:"https://flow.google.com/", rec:true,
+   desk:"Veo 3 — kualitas terbaik + dialog bersuara native",
+   tips:"Pakai mode Text to Video; untuk konsistensi karakter pakai Ingredients to Video (unggah gambar referensi). Veo menghasilkan ±8 detik — gunakan Extend untuk 10 detik. Dialog Indonesia didukung native."},
+  {id:"kling", nama:"Kling AI", url:"https://kling.ai/", rec:true,
+   desk:"Kredit gratis harian • mode 10 detik • lip sync",
+   tips:"Pilih mode 10 detik (Standard). Tempel negative prompt di kolom Negative Prompt. Untuk dialog Indonesia gunakan fitur Lip Sync. Pakai Reference Image agar karakter konsisten."},
+  {id:"hailuo", nama:"Hailuo (MiniMax)", url:"https://hailuoai.video/", rec:false,
+   desk:"Gratis • bagus untuk animasi kartun",
+   tips:"Prompt Inggris yang singkat-padat bekerja paling baik. Durasi 6–10 detik per klip."},
+  {id:"luma", nama:"Luma Dream Machine", url:"https://lumalabs.ai/dream-machine", rec:false,
+   desk:"Free tier • gerakan kamera halus",
+   tips:"Manfaatkan kontrol kamera (pan/tilt/zoom). Tempel negative prompt bila tersedia."},
+  {id:"runway", nama:"Runway", url:"https://runwayml.com/", rec:false,
+   desk:"Kontrol kamera detail • kredit terbatas",
+   tips:"Gunakan Camera Controls untuk gerakan spesifik. Hemat kredit: generate 5 detik lalu extend."},
+  {id:"pika", nama:"Pika", url:"https://pika.art/", rec:false,
+   desk:"Free tier • cepat untuk percobaan",
+   tips:"Cocok untuk storyboard cepat sebelum render final di Flow/Kling."}
+];
+
+const GAYA = {
+  "3d": "3D cartoon animation style, cheerful, bright colors, soft lighting, family-friendly, smooth motion",
+  "pixar": "high-quality 3D animation, Pixar-like, expressive characters, cinematic lighting",
+  "anime": "2D anime style, vibrant colors, clean lines, expressive",
+  "clay": "claymation stop-motion style, handmade charming feel",
+  "whiteboard": "whiteboard animation style, hand drawing in progress, clean"
+};
+
+const NEG_DEFAULT = "text, subtitles, captions, watermark, logo, scary, horror, photorealistic, blurry, distorted faces, extra limbs, deformed hands";
+
+const SAMPLE_CHARS = [
+  {nama:"Gezy", deskripsi:"cheerful Indonesian schoolgirl with long black hair in a ponytail with a red ribbon, red-and-white school uniform, bright smile"},
+  {nama:"Ikhsan", deskripsi:"energetic Indonesian schoolboy with short black hair, red-and-white school uniform, wide grin"},
+  {nama:"Tuti", deskripsi:"Indonesian schoolgirl with two small black pigtails, red-and-white school uniform, holding a pink notebook"},
+  {nama:"Wardah", deskripsi:"enthusiastic Indonesian schoolgirl wearing a light pink hijab, red-and-white school uniform"}
+];
+
+const SAMPLE_SCENES = [
+  {visual:"Title bumper: colorful 3D letters forming the words of the video title floating above a bright classroom, confetti falling, camera slowly zooming in", dialog:"", durasi:10},
+  {visual:"Gezy, Ikhsan, Tuti and Wardah sitting at classroom desks, Gezy cheerfully raising her hand and pointing at a big round pizza on the teacher desk divided into 5 equal slices", dialog:'Gezy: "Lihat! Satu pizza dipotong jadi lima bagian sama besar!"', durasi:10},
+  {visual:"Close-up of the pizza, two slices highlighted and lifting slightly while Gezy explains, other kids watching curiously, warm morning sunlight through windows", dialog:'Gezy: "Dua dari lima potong... itu artinya dua per lima!"', durasi:10}
+];
+
+const LS_KEY = "videoPrompter.library.v1";
+</script>
+
+<script>
+"use strict";
+/* ============ HELPERS ============ */
+const $ = id => document.getElementById(id);
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* ============ PLATFORM ============ */
+function renderPlatChecks(){
+  $("platChecks").innerHTML = PLATFORMS.map((p,i)=>
+    '<label class="chk"><input type="checkbox" data-plat="'+p.id+'"'+(p.rec?" checked":"")+'>'+
+    '<span><b>'+p.nama+'</b>'+(p.rec?'<span class="rec">rekomendasi</span>':"")+'<small>'+p.desk+'</small></span></label>'
+  ).join("");
+}
+
+/* ============ KARAKTER ============ */
+function charRow(nama, deskripsi){
+  const div = document.createElement("div");
+  div.className = "char-row";
+  div.innerHTML =
+    '<button type="button" class="btn btn-danger btn-sm del">✕</button>'+
+    '<div class="grid2">'+
+    '<div><label class="f">Nama karakter</label><input type="text" class="cNama" placeholder="cth: Gezy" value="'+esc(nama||"")+'"></div>'+
+    '<div><label class="f">Deskripsi visual (Inggris, konsisten)</label>'+
+    '<textarea class="cDesk" style="min-height:56px" placeholder="cth: cheerful Indonesian schoolgirl with long black hair in ponytail, red-and-white uniform">'+esc(deskripsi||"")+'</textarea></div>'+
+    '</div>';
+  div.querySelector(".del").addEventListener("click", ()=>{ div.remove(); });
+  return div;
+}
+function getChars(){
+  return [...document.querySelectorAll("#charList .char-row")].map(r=>({
+    nama: r.querySelector(".cNama").value.trim(),
+    deskripsi: r.querySelector(".cDesk").value.trim()
+  })).filter(k=>k.nama && k.deskripsi);
+}
+
+/* ============ ADEGAN ============ */
+function sceneRow(visual, dialog, durasi){
+  const idx = document.querySelectorAll("#sceneList .scene-row").length + 1;
+  const div = document.createElement("div");
+  div.className = "scene-row";
+  div.innerHTML =
+    '<button type="button" class="btn btn-danger btn-sm del">✕</button>'+
+    '<label class="f">🎬 Adegan <span class="sNum">'+idx+'</span></label>'+
+    '<div class="grid2">'+
+    '<div><label class="f">Visual adegan (Inggris)</label>'+
+    '<textarea class="sVisual" placeholder="cth: Gezy pointing at a pizza divided into 5 equal slices, close-up, warm sunlight">'+esc(visual||"")+'</textarea></div>'+
+    '<div><label class="f">Dialog (Indonesia, kosongkan bila tanpa suara)</label>'+
+    '<textarea class="sDialog" placeholder=\'cth: Gezy: "Dua dari lima potong... itu dua per lima!"\'>'+esc(dialog||"")+'</textarea></div>'+
+    '</div>'+
+    '<div style="margin-top:8px; max-width:180px"><label class="f">Durasi (detik)</label>'+
+    '<input type="number" class="sDur" min="3" max="60" value="'+(durasi||+$("fDurasi").value||10)+'"></div>';
+  div.querySelector(".del").addEventListener("click", ()=>{ div.remove(); renumber(); });
+  return div;
+}
+function renumber(){
+  document.querySelectorAll("#sceneList .scene-row .sNum").forEach((s,i)=>s.textContent = i+1);
+}
+function syncScenes(){
+  const want = Math.max(1, Math.min(20, +$("fJmlAdegan").value || 1));
+  const list = $("sceneList");
+  let cur = list.querySelectorAll(".scene-row").length;
+  while(cur < want){ list.appendChild(sceneRow()); cur++; }
+  while(cur > want){ list.removeChild(list.lastElementChild); cur--; }
+  renumber();
+}
+function getScenes(){
+  return [...document.querySelectorAll("#sceneList .scene-row")].map(r=>({
+    visual: r.querySelector(".sVisual").value.trim(),
+    dialog: r.querySelector(".sDialog").value.trim(),
+    durasi: Math.max(3, Math.min(60, +r.querySelector(".sDur").value || 10))
+  }));
+}
+function updateTotal(){
+  const n = Math.max(1, Math.min(20, +$("fJmlAdegan").value || 1));
+  const d = Math.max(3, Math.min(60, +$("fDurasi").value || 10));
+  $("totalDurasi").textContent = (n*d) + " detik (" + n + " adegan × " + d + " dtk)";
+}
+
+/* ============ CONTOH ============ */
+function isiContoh(){
+  $("fJudul").value = "Penjumlahan Pecahan — Bagian 1";
+  $("fTarget").value = "Anak SD (7–12 tahun)";
+  $("fPesan").value = "Pecahan berpenyebut sama dijumlahkan dengan menjumlahkan pembilangnya; penyebut tetap. Contoh: 1/5 + 2/5 = 3/5.";
+  $("fJmlAdegan").value = 3; $("fDurasi").value = 10; updateTotal();
+  $("charList").innerHTML = "";
+  SAMPLE_CHARS.forEach(c=>$("charList").appendChild(charRow(c.nama, c.deskripsi)));
+  $("sceneList").innerHTML = "";
+  SAMPLE_SCENES.forEach(s=>$("sceneList").appendChild(sceneRow(s.visual, s.dialog, s.durasi)));
+  renumber();
+  toast("Contoh terisi — silakan ubah lalu Generate");
+}
+
+/* ============ FORM ============ */
+function getForm(){
+  const val = id => $(id).value.trim();
+  return {
+    judul: val("fJudul"), target: val("fTarget"), pesan: val("fPesan"),
+    durasi: Math.max(3, Math.min(60, +val("fDurasi") || 10)),
+    platforms: [...document.querySelectorAll("[data-plat]:checked")].map(c=>c.getAttribute("data-plat")),
+    karakter: getChars(),
+    gaya: val("fGaya"), gayaLbl: $("fGaya").options[$("fGaya").selectedIndex].text,
+    rasio: val("fRasio"),
+    noText: $("rNoText").checked, noAge: $("rNoAge").checked,
+    consistent: $("rConsistent").checked, neg: $("rNeg").checked,
+    scenes: getScenes()
+  };
+}
+function validate(d){
+  let ok = true;
+  $("fJudul").classList.toggle("invalid", !d.judul); if(!d.judul) ok = false;
+  if(!d.platforms.length){ toast("Pilih minimal 1 platform"); ok = false; }
+  if(!d.scenes.some(s=>s.visual)){ toast("Isi visual minimal 1 adegan"); ok = false; }
+  if(!ok && d.judul && d.platforms.length) toast("Lengkapi dulu field yang bertanda merah");
+  return ok;
+}
+
+/* ============ BANGUN OUTPUT ============ */
+function scenePromptVisual(sc, d){
+  const parts = [GAYA[d.gaya]];
+  if(d.consistent && d.karakter.length)
+    parts.push("Characters (keep identical in every scene): " + d.karakter.map(k=>k.nama+" — "+k.deskripsi).join("; "));
+  parts.push("Scene: " + sc.visual);
+  if(d.rasio) parts.push("Aspect ratio " + d.rasio);
+  if(d.noText) parts.push("no text, no subtitles, no captions");
+  return parts.join(". ") + ".";
+}
+function buildMarkdown(d){
+  const L = [];
+  L.push("# " + d.judul);
+  L.push("");
+  L.push("Target: " + d.target + " | Gaya: " + d.gayaLbl + " | Rasio: " + d.rasio);
+  if(d.pesan) L.push("Pesan/materi: " + d.pesan);
+  L.push("");
+  d.scenes.forEach((sc,i)=>{
+    if(!sc.visual) return;
+    L.push("## Adegan " + (i+1) + " (" + sc.durasi + " detik)");
+    L.push("");
+    L.push("**Prompt visual:**");
+    L.push(scenePromptVisual(sc, d));
+    L.push("");
+    if(sc.dialog){ L.push("**Dialog:**"); L.push(sc.dialog); L.push(""); }
+    if(d.neg){ L.push("**Negative prompt:**"); L.push(NEG_DEFAULT); L.push(""); }
+  });
+  return L.join("\n");
+}
+let lastData = null, lastMarkdown = "";
+function doGenerate(){
+  const d = getForm();
+  if(!validate(d)) return;
+  lastData = d; lastMarkdown = buildMarkdown(d);
+  // tips
+  $("tipsBox").innerHTML = '<div class="tips"><b>💡 Tips platform terpilih:</b><ul>' +
+    d.platforms.map(pid=>{
+      const p = PLATFORMS.find(x=>x.id===pid);
+      return "<li><b>"+p.nama+":</b> "+p.tips+"</li>";
+    }).join("") + "</ul></div>";
+  const total = d.scenes.filter(s=>s.visual).reduce((a,s)=>a+s.durasi,0);
+  $("sumBar").innerHTML = "<span>🎬 <b>"+d.judul+"</b></span><span>Jumlah adegan: <b>"+d.scenes.filter(s=>s.visual).length+"</b></span><span>Estimasi total: <b>"+total+" detik</b></span>";
+  // scenes
+  let n = 0;
+  $("sceneOut").innerHTML = d.scenes.map((sc)=>{
+    if(!sc.visual) return "";
+    n++;
+    const pv = scenePromptVisual(sc, d);
+    return '<div class="scene-out" data-scene="'+n+'">'+
+      '<div class="sh"><span>🎬 Adegan '+n+'</span><span class="dur">'+sc.durasi+' detik</span></div>'+
+      '<div class="sb">'+
+      '<div class="block-label">📌 Prompt visual — tempel ke kolom prompt</div>'+
+      '<div class="prompt-box" data-b="pv">'+esc(pv)+'</div>'+
+      (sc.dialog ? '<div class="block-label">💬 Dialog — kolom dialog / diucapkan</div><div class="dialog-box" data-b="dg">'+esc(sc.dialog)+'</div>' : "")+
+      (d.neg ? '<div class="block-label">🚫 Negative prompt</div><div class="neg-box" data-b="ng">'+esc(NEG_DEFAULT)+'</div>' : "")+
+      '<div class="copy-row"><button class="btn btn-navy btn-sm" data-copy="one">📋 Salin adegan ini</button></div>'+
+      '</div></div>';
+  }).join("");
+  $("sceneOut").querySelectorAll('[data-copy="one"]').forEach(b=>b.addEventListener("click", ()=>{
+    const box = b.closest(".scene-out");
+    const parts = ['ADEGAN '+box.getAttribute("data-scene")+' — '+d.judul];
+    const pv = box.querySelector('[data-b="pv"]'); if(pv) parts.push("PROMPT VISUAL:\n"+pv.textContent);
+    const dg = box.querySelector('[data-b="dg"]'); if(dg) parts.push("DIALOG:\n"+dg.textContent);
+    const ng = box.querySelector('[data-b="ng"]'); if(ng) parts.push("NEGATIVE PROMPT:\n"+ng.textContent);
+    copyText(parts.join("\n\n"));
+  }));
+  // platform open buttons
+  $("platRow").innerHTML = d.platforms.map(pid=>{
+    const p = PLATFORMS.find(x=>x.id===pid);
+    return '<button class="btn btn-ghost btn-sm" type="button" data-open="'+p.url+'">🚀 Buka '+p.nama+'</button>';
+  }).join("");
+  $("platRow").querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click", ()=>{
+    window.open(b.getAttribute("data-open"), "_blank", "noopener");
+  }));
+  $("outputCard").classList.add("show");
+  if($("outputCard").scrollIntoView) $("outputCard").scrollIntoView({behavior:"smooth", block:"start"});
+  toast("Prompt video berhasil dibuat ⚡");
+}
+function copyText(t){
+  if(!t){ toast("Tidak ada yang disalin"); return; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>toast("Tersalin 📋")).catch(()=>fallbackCopy(t));
+  } else fallbackCopy(t);
+}
+function fallbackCopy(t){
+  const ta = document.createElement("textarea");
+  ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toast("Tersalin 📋"); }
+  catch(e){ toast("Gagal menyalin"); }
+  document.body.removeChild(ta);
+}
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60) || "video-prompter"; }
+function doDownload(){
+  if(!lastMarkdown){ toast("Generate dulu"); return; }
+  const blob = new Blob([lastMarkdown], {type:"text/markdown;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = slug(lastData.judul) + ".md";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("File .md diunduh ⬇️");
+}
+
+/* ============ PUSTAKA ============ */
+function loadLib(){
+  try{ const raw = localStorage.getItem(LS_KEY); const arr = raw ? JSON.parse(raw) : []; return Array.isArray(arr) ? arr : []; }
+  catch(e){ return []; }
+}
+function saveLib(arr){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(arr)); return true; }
+  catch(e){ toast("Penyimpanan penuh / tidak tersedia"); return false; }
+}
+function serializeProject(){
+  const d = getForm();
+  return {judul:d.judul, target:d.target, pesan:d.pesan, durasi:d.durasi,
+    platforms:d.platforms, karakter:d.karakter, gaya:d.gaya, rasio:d.rasio,
+    noText:d.noText, noAge:d.noAge, consistent:d.consistent, neg:d.neg,
+    scenes:d.scenes, jmlAdegan:+$("fJmlAdegan").value||d.scenes.length};
+}
+function restoreProject(p){
+  $("fJudul").value=p.judul||""; $("fTarget").value=p.target||"Anak SD (7–12 tahun)";
+  $("fPesan").value=p.pesan||""; $("fDurasi").value=p.durasi||10;
+  document.querySelectorAll("[data-plat]").forEach(c=>c.checked=(p.platforms||[]).includes(c.getAttribute("data-plat")));
+  $("fGaya").value=p.gaya||"3d"; $("fRasio").value=p.rasio||"16:9";
+  $("rNoText").checked=p.noText!==false; $("rNoAge").checked=p.noAge!==false;
+  $("rConsistent").checked=p.consistent!==false; $("rNeg").checked=p.neg!==false;
+  $("charList").innerHTML=""; (p.karakter||[]).forEach(k=>$("charList").appendChild(charRow(k.nama,k.deskripsi)));
+  $("fJmlAdegan").value=p.jmlAdegan||(p.scenes||[]).length||1;
+  $("sceneList").innerHTML=""; (p.scenes||[]).forEach(s=>$("sceneList").appendChild(sceneRow(s.visual,s.dialog,s.durasi)));
+  renumber(); updateTotal();
+}
+function doSave(){
+  if(!lastData){ toast("Generate dulu"); return; }
+  const lib = loadLib();
+  lib.unshift(Object.assign({id:"v"+Date.now().toString(36), ts:Date.now(), markdown:lastMarkdown}, serializeProject()));
+  if(saveLib(lib)){ renderLib(); toast("Proyek tersimpan 💾"); }
+}
+function renderLib(){
+  const lib = loadLib(), wrap = $("libList");
+  if(!lib.length){
+    wrap.innerHTML = '<div class="empty-lib">📭 Belum ada proyek tersimpan.<br>Generate lalu tekan <b>💾 Simpan ke Pustaka</b>.</div>';
+    return;
+  }
+  wrap.innerHTML = lib.map(it=>{
+    const tgl = new Date(it.ts).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"});
+    const nAd = (it.scenes||[]).filter(s=>s.visual).length;
+    return '<div class="lib-item"><div class="meta"><div class="jt">'+esc(it.judul||"(tanpa judul)")+'</div>'+
+      '<div class="js">'+nAd+' adegan • '+esc((it.platforms||[]).join(", "))+' • '+tgl+'</div></div>'+
+      '<div class="acts">'+
+      '<button class="btn btn-navy btn-sm" data-act="view" data-id="'+it.id+'">👁️ Buka</button>'+
+      '<button class="btn btn-ghost btn-sm" data-act="dl" data-id="'+it.id+'">⬇️</button>'+
+      '<button class="btn btn-danger btn-sm" data-act="del" data-id="'+it.id+'">🗑️</button>'+
+      '</div></div>';
+  }).join("");
+  wrap.querySelectorAll("button[data-act]").forEach(b=>b.addEventListener("click",()=>{
+    const id = b.getAttribute("data-id"), act = b.getAttribute("data-act");
+    const it = loadLib().find(x=>x.id===id); if(!it) return;
+    if(act==="view"){ restoreProject(it); try{ window.scrollTo({top:0,behavior:"smooth"}); }catch(e){} toast("Proyek dimuat — tekan Generate"); }
+    else if(act==="dl"){
+      const blob = new Blob([it.markdown||""], {type:"text/markdown;charset=utf-8"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = slug(it.judul) + ".md";
+      document.body.appendChild(a); a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+    else if(act==="del"){ if(confirm("Hapus proyek ini?")){ saveLib(loadLib().filter(x=>x.id!==id)); renderLib(); } }
+  }));
+}
+function doExport(){
+  const lib = loadLib();
+  if(!lib.length){ toast("Pustaka masih kosong"); return; }
+  const blob = new Blob([JSON.stringify(lib,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "pustaka-video-prompter.json";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("Pustaka diekspor ⬆️");
+}
+function doImport(file){
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const arr = JSON.parse(r.result);
+      if(!Array.isArray(arr)) throw new Error("format salah");
+      const cur = loadLib(), ids = new Set(cur.map(x=>x.id));
+      let n = 0;
+      arr.forEach(it=>{ if(it && it.judul && !ids.has(it.id)){ cur.push(it); n++; } });
+      cur.sort((a,b)=>(b.ts||0)-(a.ts||0));
+      if(saveLib(cur)){ renderLib(); toast(n + " proyek diimpor ⬇️"); }
+    }catch(e){ toast("File tidak valid"); }
+  };
+  r.readAsText(file);
+}
+
+/* ============ INIT ============ */
+document.addEventListener("DOMContentLoaded", ()=>{
+  renderPlatChecks(); renderLib();
+  $("charList").appendChild(charRow());
+  syncScenes(); updateTotal();
+  $("fJmlAdegan").addEventListener("input", updateTotal);
+  $("fDurasi").addEventListener("input", updateTotal);
+  $("btnSyncScenes").addEventListener("click", ()=>{ syncScenes(); toast("Daftar adegan disesuaikan 🔄"); });
+  $("btnAddChar").addEventListener("click", ()=>$("charList").appendChild(charRow()));
+  $("btnAddScene").addEventListener("click", ()=>{ $("sceneList").appendChild(sceneRow()); renumber(); });
+  $("btnSample").addEventListener("click", isiContoh);
+  $("btnGenerate").addEventListener("click", doGenerate);
+  $("btnCopyAll").addEventListener("click", ()=>copyText(lastMarkdown));
+  $("btnSave").addEventListener("click", doSave);
+  $("btnDownload").addEventListener("click", doDownload);
+  $("btnExport").addEventListener("click", doExport);
+  $("btnImport").addEventListener("click", ()=>$("fileImport").click());
+  $("fileImport").addEventListener("change", e=>{ if(e.target.files[0]) doImport(e.target.files[0]); e.target.value=""; });
+});
+</script>
+</body>
+</html>
+

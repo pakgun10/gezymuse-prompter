@@ -22,8 +22,9 @@
   .badge{display:inline-block; background:rgba(245,179,1,.16); border:1px solid var(--gold);
     color:var(--gold); font-size:.78rem; padding:4px 14px; border-radius:999px; margin-top:14px;}
   main{max-width:900px; margin:0 auto; padding:36px 16px 60px; flex:1; width:100%;}
-  .cards{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
-  @media(max-width:680px){.cards{grid-template-columns:1fr;}}
+  .cards{display:grid; grid-template-columns:1fr 1fr 1fr; gap:22px;}
+  @media(max-width:900px){.cards{grid-template-columns:1fr 1fr;}}
+  @media(max-width:620px){.cards{grid-template-columns:1fr;}}
   .app-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
     padding:30px 26px; box-shadow:0 4px 18px rgba(27,42,74,.08);
     display:flex; flex-direction:column; transition:.2s;}
@@ -82,6 +83,18 @@
         <li>Kirim prompt ke 10 AI web</li>
       </ul>
       <a class="btn" href="rpp/">Buka RPP Prompter →</a>
+    </div>
+    <div class="app-card">
+      <div class="icon">🎬</div>
+      <h2>Video <span class="gold">Prompter</span></h2>
+      <p>Buat prompt video pembelajaran per adegan untuk Google Flow, Kling AI, dan lainnya.</p>
+      <ul>
+        <li>Naskah per adegan + durasi fleksibel</li>
+        <li>Karakter dikunci konsisten antaradegan</li>
+        <li>Konvensi aman filter (no text, no subtitles)</li>
+        <li>Tips tiap platform + tombol buka langsung</li>
+      </ul>
+      <a class="btn" href="video/">Buka Video Prompter →</a>
     </div>
   </div>
 
