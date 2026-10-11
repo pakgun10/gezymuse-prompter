@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cerita Anak Prompter — Generator Prompt Dongeng Bergambar</title>
+<style>
+  :root{
+    --navy:#1B2A4A; --navy2:#243b63; --gold:#F5B301; --gold2:#d99e00;
+    --bg:#F4F6FB; --card:#ffffff; --ink:#1e2a3a; --muted:#6b7a90;
+    --line:#e3e9f2; --green:#22c55e; --red:#ef4444; --radius:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.55;}
+  .back-home{position:fixed; top:14px; left:14px; z-index:100; display:inline-flex; align-items:center; gap:6px;
+    background:rgba(27,42,74,.94); color:#fff; text-decoration:none; font-size:.85rem; font-weight:700;
+    padding:9px 15px; border-radius:999px; border:1px solid rgba(245,179,1,.55); box-shadow:0 4px 14px rgba(0,0,0,.25); transition:.15s;}
+  .back-home:hover{background:var(--gold); color:var(--navy); border-color:var(--gold);}
+  header.top{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 70%,#2f4a7d 100%);
+    color:#fff; padding:34px 20px 30px; text-align:center; position:sticky; top:0; z-index:50;
+    box-shadow:0 4px 18px rgba(27,42,74,.35);}
+  header.top h1{font-size:clamp(1.6rem,4vw,2.4rem); letter-spacing:.5px;}
+  header.top h1 .gold{color:var(--gold);}
+  header.top p{opacity:.88; margin-top:6px; font-size:clamp(.85rem,2.4vw,1rem);}
+  .badge{display:inline-block; background:rgba(245,179,1,.16); border:1px solid var(--gold);
+    color:var(--gold); font-size:.75rem; padding:3px 12px; border-radius:999px; margin-top:10px;}
+  main{max-width:980px; margin:0 auto; padding:24px 16px 90px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px; margin-bottom:20px; box-shadow:0 2px 10px rgba(27,42,74,.06);}
+  .card h2{font-size:1.15rem; color:var(--navy); margin-bottom:4px; display:flex; align-items:center; gap:8px;}
+  .card h2 .num{background:var(--navy); color:#fff; width:28px; height:28px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; flex:none;}
+  .card .desc{color:var(--muted); font-size:.88rem; margin-bottom:16px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  label.f{display:block; font-weight:600; font-size:.88rem; margin-bottom:6px; color:var(--navy);}
+  label.f .req{color:var(--red);}
+  .hint{font-size:.78rem; color:var(--muted); margin-top:4px;}
+  input[type=text],input[type=number],select,textarea{
+    width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:.95rem; font-family:inherit; background:#fff; color:var(--ink);}
+  input:focus,select:focus,textarea:focus{outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(27,42,74,.12);}
+  textarea{min-height:74px; resize:vertical;}
+  input.invalid,select.invalid,textarea.invalid{border-color:var(--red); box-shadow:0 0 0 3px rgba(239,68,68,.12);}
+  .btn{display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; font-family:inherit;
+    font-weight:700; border-radius:12px; padding:13px 26px; font-size:1rem; transition:.15s;}
+  .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--navy); box-shadow:0 4px 14px rgba(245,179,1,.4);}
+  .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(245,179,1,.5);}
+  .btn-navy{background:var(--navy); color:#fff;}
+  .btn-navy:hover{background:var(--navy2);}
+  .btn-ghost{background:#fff; color:var(--navy); border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--navy);}
+  .btn-sm{padding:8px 14px; font-size:.85rem; border-radius:9px;}
+  .btn-danger{background:#fee2e2; color:#b91c1c; border:1px solid #fecaca;}
+  .center{text-align:center; margin:26px 0 8px;}
+  .gen-btn{font-size:1.15rem; padding:16px 44px;}
+  #outputCard{display:none;}
+  #outputCard.show{display:block; animation:fadeUp .35s ease;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(12px);}to{opacity:1; transform:none;}}
+  .out-block{margin-bottom:16px;}
+  .block-label{font-size:.8rem; font-weight:700; color:var(--navy); margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;}
+  pre#promptCerita{background:#0f1b30; color:#dbe7ff; border-radius:12px; padding:18px; font-size:.82rem;
+    line-height:1.6; max-height:420px; overflow:auto; white-space:pre-wrap; word-wrap:break-word;
+    font-family:"Cascadia Code",Consolas,"Courier New",monospace;}
+  .prompt-img{background:#f0fdf4; border:1px solid #bbf7d0; color:#14532d; border-radius:12px; padding:14px 16px;
+    font-size:.85rem; line-height:1.6; white-space:pre-wrap; word-wrap:break-word;}
+  .out-actions{display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 4px;}
+  .lib-item{border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:10px;
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:#fbfcff;}
+  .lib-item .meta{flex:1; min-width:200px;}
+  .lib-item .meta .jt{font-weight:700; color:var(--navy);}
+  .lib-item .meta .js{font-size:.8rem; color:var(--muted);}
+  .lib-item .acts{display:flex; gap:6px; flex-wrap:wrap;}
+  .empty-lib{text-align:center; color:var(--muted); padding:26px 10px; font-size:.9rem;}
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+    background:var(--navy); color:#fff; padding:12px 22px; border-radius:999px; font-size:.9rem;
+    opacity:0; transition:.25s; z-index:200; box-shadow:0 6px 20px rgba(0,0,0,.25); pointer-events:none;
+    max-width:92vw; text-align:center;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  footer{background:var(--navy); color:#cdd8ea; text-align:center; padding:22px 16px; font-size:.88rem;}
+  footer .gold{color:var(--gold); font-weight:700;}
+  .sample-link{background:none; border:none; color:var(--navy); font-size:.82rem; cursor:pointer;
+    text-decoration:underline; font-family:inherit; padding:0;}
+  .sec-head-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:4px;}
+  .ai-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .ai-label{font-size:.85rem; font-weight:700; color:var(--navy); margin-top:16px;}
+  .ai-label .hint{font-weight:400;}
+  .char-row,.page-row{border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:12px; background:#fbfcff; position:relative;}
+  .char-row .del,.page-row .del{position:absolute; top:10px; right:10px;}
+</style>
+</head>
+<body>
+<a class="back-home" href="../">← 🏠 Beranda</a>
+
+<header class="top">
+  <h1>📚 Cerita Anak <span class="gold">Prompter</span></h1>
+  <p>Generator prompt dongeng bergambar — naskah cerita + ilustrasi per halaman</p>
+  <span class="badge">Dua keluaran: naskah (AI chat) + ilustrasi (AI gambar)</span>
+</header>
+
+<main>
+  <!-- 1. CERITA -->
+  <section class="card">
+    <div class="sec-head-row">
+      <h2><span class="num">1</span> Cerita</h2>
+      <button class="sample-link" id="btnSample" type="button">✨ isi contoh cepat</button>
+    </div>
+    <p class="desc">Dongeng tentang apa?</p>
+    <div class="grid2">
+      <div>
+        <label class="f" for="fJudul">Judul cerita <span class="req">*</span></label>
+        <input type="text" id="fJudul" placeholder="cth: Kiki dan Ember Ajaib">
+      </div>
+      <div>
+        <label class="f" for="fTarget">Target pembaca</label>
+        <select id="fTarget">
+          <option>PAUD / TK</option>
+          <option selected>SD kelas 1–3</option>
+          <option>SD kelas 4–6</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fNilai">Nilai moral</label>
+        <select id="fNilai">
+          <option>Kejujuran</option>
+          <option>Kerja sama</option>
+          <option>Kebaikan hati</option>
+          <option>Ketekunan</option>
+          <option>Tanggung jawab</option>
+          <option>Kasih sayang keluarga</option>
+          <option>Menjaga lingkungan</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fHal">Jumlah halaman</label>
+        <input type="number" id="fHal" min="4" max="20" value="8">
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <label class="f" for="fPesan">Ide cerita <span class="req">*</span></label>
+      <textarea id="fPesan" placeholder="Tulis ide/garis besar cerita, 2–4 kalimat. Contoh: Kiki menemukan ember ajaib yang selalu penuh air. Ia tergoda memakainya sendiri, tapi akhirnya berbagi dengan tetangganya yang kekeringan."></textarea>
+    </div>
+  </section>
+
+  <!-- 2. KARAKTER -->
+  <section class="card">
+    <div class="sec-head-row">
+      <h2><span class="num">2</span> Karakter</h2>
+      <button class="btn btn-ghost btn-sm" id="btnAddChar" type="button">＋ Tambah karakter</button>
+    </div>
+    <p class="desc">Tokoh cerita — deskripsi visual Inggris dikunci agar konsisten tiap halaman.</p>
+    <div id="charList"></div>
+  </section>
+
+  <!-- 3. GAYA -->
+  <section class="card">
+    <h2><span class="num">3</span> Gaya Ilustrasi</h2>
+    <div class="grid2">
+      <div>
+        <label class="f" for="fGaya">Gaya gambar</label>
+        <select id="fGaya">
+          <option value="kartun">Kartun anak ceria</option>
+          <option value="watercolor">Cat air lembut</option>
+          <option value="flat">Flat illustration modern</option>
+          <option value="dongeng">Dongeng klasik hangat</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fSuasana">Suasana</label>
+        <select id="fSuasana">
+          <option>Ceria dan hangat</option>
+          <option>Petualangan seru</option>
+          <option>Tenang sebelum tidur</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <div class="center">
+    <button class="btn btn-primary gen-btn" id="btnGenerate" type="button">⚡ Generate Prompt Cerita</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <section class="card" id="outputCard">
+    <h2><span class="num">✓</span> Prompt Siap Pakai</h2>
+    <p class="desc">Dua prompt: <b>naskah cerita</b> untuk AI chat, dan <b>ilustrasi per halaman</b> untuk AI gambar.</p>
+    <div class="out-block">
+      <div class="block-label">📝 Prompt naskah cerita — tempel ke AI chat</div>
+      <pre id="promptCerita"></pre>
+      <div class="out-actions">
+        <button class="btn btn-navy btn-sm" id="btnCopyCerita" type="button">📋 Salin prompt naskah</button>
+      </div>
+    </div>
+    <div class="out-block">
+      <div class="block-label">🎨 Prompt ilustrasi — tempel ke AI gambar (Inggris, tanpa teks)</div>
+      <div class="prompt-img" id="promptImg"></div>
+      <div class="out-actions">
+        <button class="btn btn-navy btn-sm" id="btnCopyImg" type="button">📋 Salin prompt ilustrasi</button>
+      </div>
+    </div>
+    <div class="out-actions">
+      <button class="btn btn-ghost btn-sm" id="btnSave" type="button">💾 Simpan ke Pustaka</button>
+      <button class="btn btn-ghost btn-sm" id="btnDownload" type="button">⬇️ Unduh .md</button>
+    </div>
+    <div class="ai-label">🚀 Kirim prompt naskah ke AI chat</div>
+    <div class="ai-row" id="aiRow"></div>
+    <div class="ai-label">🎨 Buka AI gambar</div>
+    <div class="ai-row" id="imgRow"></div>
+  </section>
+
+  <!-- PUSTAKA -->
+  <section class="card">
+    <div class="sec-head-row">
+      <h2><span class="num">📚</span> Pustaka Cerita Saya</h2>
+      <div>
+        <button class="btn btn-ghost btn-sm" id="btnExport" type="button">⬆️ Ekspor JSON</button>
+        <button class="btn btn-ghost btn-sm" id="btnImport" type="button">⬇️ Impor JSON</button>
+        <input type="file" id="fileImport" accept="application/json" style="display:none">
+      </div>
+    </div>
+    <p class="desc">Semua rancangan cerita tersimpan otomatis di perangkat ini.</p>
+    <div id="libList"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="gold">📚 Cerita Anak Prompter</div>
+  <div style="margin-top:6px">@2026 GezyTech Prompter. Dikembangkan oleh PakGun</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============ DATA ============ */
+const GAYA_IMG = {
+  kartun: "cheerful children's book cartoon style, big expressive eyes, bright colors",
+  watercolor: "soft watercolor children's book illustration, gentle dreamy tones",
+  flat: "modern flat vector illustration for kids, clean shapes, playful",
+  dongeng: "warm classic storybook illustration style, cozy, timeless"
+};
+const AI_LIST = [
+  {nama:"Muse", url:"https://muse.ai/"},
+  {nama:"ChatGPT", url:"https://chatgpt.com/"},
+  {nama:"Claude", url:"https://claude.ai/"},
+  {nama:"Gemini", url:"https://gemini.google.com/"},
+  {nama:"DeepSeek", url:"https://chat.deepseek.com/"}
+];
+const IMG_AI = [
+  {nama:"Ideogram", url:"https://ideogram.ai/", desk:"Terbaik untuk teks di gambar"},
+  {nama:"Designer", url:"https://designer.microsoft.com/", desk:"Gratis (DALL-E 3)"},
+  {nama:"Leonardo", url:"https://leonardo.ai/", desk:"Free tier"},
+  {nama:"Firefly", url:"https://firefly.adobe.com/", desk:"Free tier Adobe"},
+  {nama:"Canva", url:"https://www.canva.com/", desk:"Magic Media + template"}
+];
+const LS_KEY = "ceritaPrompter.library.v1";
+</script>
+
+<script>
+"use strict";
+/* ============ HELPERS ============ */
+const $ = id => document.getElementById(id);
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 2400);
+}
+function esc(s){ return String(s==null?"":s); }
+
+/* ============ KARAKTER ============ */
+function charRow(nama, deskripsi){
+  const div = document.createElement("div");
+  div.className = "char-row";
+  div.innerHTML =
+    '<button type="button" class="btn btn-danger btn-sm del">✕</button>'+
+    '<div class="grid2">'+
+    '<div><label class="f">Nama tokoh</label><input type="text" class="cNama" placeholder="cth: Kiki" value="'+esc(nama||"")+'"></div>'+
+    '<div><label class="f">Deskripsi visual (Inggris, konsisten)</label>'+
+    '<textarea class="cDesk" style="min-height:56px" placeholder="cth: cute 6-year-old Indonesian girl with short black hair, yellow dress">'+esc(deskripsi||"")+'</textarea></div>'+
+    '</div>';
+  div.querySelector(".del").addEventListener("click", ()=>{ div.remove(); });
+  return div;
+}
+function getChars(){
+  return [...document.querySelectorAll("#charList .char-row")].map(r=>({
+    nama: r.querySelector(".cNama").value.trim(),
+    deskripsi: r.querySelector(".cDesk").value.trim()
+  })).filter(k=>k.nama && k.deskripsi);
+}
+
+/* ============ RENDER ============ */
+function renderAIRows(){
+  $("aiRow").innerHTML = AI_LIST.map((a,i)=>
+    '<button class="btn btn-ghost btn-sm" type="button" data-ai="'+i+'">🚀 '+a.nama+'</button>').join("");
+  $("aiRow").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    const ai = AI_LIST[+b.getAttribute("data-ai")];
+    copyText(lastCerita);
+    window.open(ai.url, "_blank", "noopener");
+    toast("Membuka "+ai.nama+" — prompt tersalin 📋");
+  }));
+  $("imgRow").innerHTML = IMG_AI.map((a,i)=>
+    '<button class="btn btn-ghost btn-sm" type="button" data-img="'+i+'" title="'+a.desk+'">🎨 '+a.nama+'</button>').join("");
+  $("imgRow").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    const ai = IMG_AI[+b.getAttribute("data-img")];
+    copyText(lastImg);
+    window.open(ai.url, "_blank", "noopener");
+    toast("Membuka "+ai.nama+" — prompt ilustrasi tersalin 📋");
+  }));
+}
+
+/* ============ CONTOH ============ */
+function isiContoh(){
+  $("fJudul").value = "Kiki dan Ember Ajaib";
+  $("fTarget").value = "SD kelas 1–3"; $("fNilai").value = "Kebaikan hati"; $("fHal").value = 8;
+  $("fPesan").value = "Kiki menemukan ember ajaib yang selalu penuh air. Ia tergoda memakainya sendiri, tapi akhirnya berbagi dengan tetangganya yang kekeringan.";
+  $("fGaya").value = "kartun"; $("fSuasana").value = "Ceria dan hangat";
+  $("charList").innerHTML = "";
+  $("charList").appendChild(charRow("Kiki", "cute 7-year-old Indonesian girl with short black hair, yellow dress, bright smile"));
+  $("charList").appendChild(charRow("Nek Siti", "kind elderly Indonesian woman with gray hair in a bun, batik shawl"));
+  toast("Contoh terisi — silakan ubah lalu Generate");
+}
+
+/* ============ FORM ============ */
+function getForm(){
+  const val = id => $(id).value.trim();
+  return {
+    judul: val("fJudul"), target: val("fTarget"), nilai: val("fNilai"),
+    hal: Math.max(4, Math.min(20, +val("fHal") || 8)),
+    pesan: val("fPesan"), karakter: getChars(),
+    gaya: val("fGaya"), suasana: val("fSuasana"),
+    gayaLbl: $("fGaya").options[$("fGaya").selectedIndex].text
+  };
+}
+function validate(d){
+  let ok = true;
+  [["fJudul",d.judul],["fPesan",d.pesan]].forEach(([id,v])=>{
+    $(id).classList.toggle("invalid", !v); if(!v) ok = false;
+  });
+  if(!ok) toast("Lengkapi: judul dan ide cerita");
+  return ok;
+}
+
+/* ============ BANGUN PROMPT ============ */
+function buildCerita(d){
+  const L = [];
+  const kataMax = d.target === "PAUD / TK" ? 25 : 40;
+  L.push("🎯 BUAT CERITA ANAK BERGAMBAR");
+  L.push('"' + d.judul + '" • ' + d.target + " • " + d.hal + " halaman");
+  L.push("");
+  L.push("Buatkan NASKAH dongeng anak berbahasa Indonesia untuk " + d.target.toLowerCase() + ".");
+  L.push("");
+  L.push("─── A. KONFIGURASI ───");
+  L.push("Ide cerita : " + d.pesan);
+  L.push("Nilai moral : " + d.nilai + " — harus TERASA dari kejadian, bukan diceramahkan");
+  if(d.karakter.length) L.push("Tokoh     : " + d.karakter.map(k=>k.nama).join(", "));
+  L.push("Suasana     : " + d.suasana.toLowerCase());
+  L.push("");
+  L.push("─── B. STRUKTUR " + d.hal + " HALAMAN ───");
+  L.push("Bagi cerita menjadi " + d.hal + " halaman mengikuti alur: pembuka (perkenalan tokoh & dunia) → masalah/tantangan → usaha & bantuan → penyelesaian → penutup hangat.");
+  L.push("Untuk TIAP halaman tulis:");
+  L.push("  1) TEKS CERITA — maks " + kataMax + " kata, kalimat pendek, bahasa lisan yang enak dibacakan");
+  L.push("  2) DESKRIPSI ILUSTRASI — 1 kalimat bahasa Inggris: apa yang terlihat di halaman itu (tokoh, aksi, latar)");
+  L.push("");
+  L.push("─── C. ATURAN ───");
+  L.push("1. Tokoh konsisten: nama, sifat, dan penampilan sama di semua halaman.");
+  L.push("2. Konflik ringan sesuai usia — tanpa kekerasan, tanpa tokoh yang menakutkan.");
+  L.push("3. Akhir bahagia dan menenangkan.");
+  L.push("4. Nilai moral " + d.nilai.toLowerCase() + " muncul lewat PERBUATAN tokoh, lalu ditegaskan 1 kalimat di halaman terakhir.");
+  L.push("");
+  L.push("─── LARANGAN ───");
+  L.push("1. Dilarang menceramahi ('anak-anak harus...') di tengah cerita.");
+  L.push("2. Dilarang kata sulit tanpa konteks yang menjelaskan.");
+  L.push("3. Dilarang mengubah nama/sifat tokoh di tengah jalan.");
+  return L.join("\n");
+}
+function buildImg(d){
+  const chars = d.karakter.length
+    ? "Characters (keep identical on every page): " + d.karakter.map(k=>k.nama+" — "+k.deskripsi).join("; ") + ". "
+    : "";
+  return GAYA_IMG[d.gaya] + ", " + chars +
+    "storybook illustration for page of a children's book about: " + d.pesan +
+    ", " + d.suasana.toLowerCase() + " mood, no text, no letters, no words, no watermark.";
+}
+
+/* ============ GENERATE & OUTPUT ============ */
+let lastCerita = "", lastImg = "", lastData = null;
+function doGenerate(){
+  const d = getForm();
+  if(!validate(d)) return;
+  lastData = d;
+  lastCerita = buildCerita(d);
+  lastImg = buildImg(d);
+  $("promptCerita").textContent = lastCerita;
+  $("promptImg").textContent = lastImg;
+  $("outputCard").classList.add("show");
+  if($("outputCard").scrollIntoView) $("outputCard").scrollIntoView({behavior:"smooth", block:"start"});
+  toast("Prompt cerita berhasil dibuat ⚡");
+}
+function copyText(t){
+  if(!t){ toast("Generate dulu"); return; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>toast("Tersalin 📋")).catch(()=>fallbackCopy(t));
+  } else fallbackCopy(t);
+}
+function fallbackCopy(t){
+  const ta = document.createElement("textarea");
+  ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toast("Tersalin 📋"); }
+  catch(e){ toast("Gagal menyalin"); }
+  document.body.removeChild(ta);
+}
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60) || "cerita"; }
+function doDownload(){
+  if(!lastCerita){ toast("Generate dulu"); return; }
+  const md = "# " + lastData.judul + "\n\n## Prompt Naskah\n\n```\n" + lastCerita + "\n```\n\n## Prompt Ilustrasi\n\n```\n" + lastImg + "\n```\n";
+  const blob = new Blob([md], {type:"text/markdown;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = slug(lastData.judul) + ".md";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("File .md diunduh ⬇️");
+}
+
+/* ============ PUSTAKA ============ */
+function loadLib(){
+  try{ const raw = localStorage.getItem(LS_KEY); const arr = raw ? JSON.parse(raw) : []; return Array.isArray(arr) ? arr : []; }
+  catch(e){ return []; }
+}
+function saveLib(arr){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(arr)); return true; }
+  catch(e){ toast("Penyimpanan penuh / tidak tersedia"); return false; }
+}
+function doSave(){
+  if(!lastData){ toast("Generate dulu"); return; }
+  const d = lastData, lib = loadLib();
+  lib.unshift({id:"c"+Date.now().toString(36), judul:d.judul, target:d.target,
+    hal:d.hal, ts:Date.now(), cerita:lastCerita, img:lastImg});
+  if(saveLib(lib)){ renderLib(); toast("Tersimpan di Pustaka 💾"); }
+}
+function renderLib(){
+  const lib = loadLib(), wrap = $("libList");
+  if(!lib.length){
+    wrap.innerHTML = '<div class="empty-lib">📭 Belum ada cerita tersimpan.<br>Generate lalu tekan <b>💾 Simpan ke Pustaka</b>.</div>';
+    return;
+  }
+  wrap.innerHTML = lib.map(it=>{
+    const tgl = new Date(it.ts).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"});
+    return '<div class="lib-item"><div class="meta"><div class="jt">'+esc(it.judul)+'</div>'+
+      '<div class="js">'+esc(it.target||"")+' • '+it.hal+' halaman • '+tgl+'</div></div>'+
+      '<div class="acts">'+
+      '<button class="btn btn-navy btn-sm" data-act="view" data-id="'+it.id+'">👁️ Lihat</button>'+
+      '<button class="btn btn-ghost btn-sm" data-act="dl" data-id="'+it.id+'">⬇️</button>'+
+      '<button class="btn btn-danger btn-sm" data-act="del" data-id="'+it.id+'">🗑️</button>'+
+      '</div></div>';
+  }).join("");
+  wrap.querySelectorAll("button[data-act]").forEach(b=>b.addEventListener("click",()=>{
+    const id = b.getAttribute("data-id"), act = b.getAttribute("data-act");
+    const it = loadLib().find(x=>x.id===id); if(!it) return;
+    if(act==="view"){
+      lastCerita = it.cerita; lastImg = it.img; lastData = {judul: it.judul};
+      $("promptCerita").textContent = it.cerita; $("promptImg").textContent = it.img;
+      $("outputCard").classList.add("show");
+      if($("outputCard").scrollIntoView) $("outputCard").scrollIntoView({behavior:"smooth", block:"start"});
+    }
+    else if(act==="dl"){
+      const md = "# "+it.judul+"\n\n## Prompt Naskah\n\n```\n"+it.cerita+"\n```\n\n## Prompt Ilustrasi\n\n```\n"+it.img+"\n```\n";
+      const blob = new Blob([md], {type:"text/markdown;charset=utf-8"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = slug(it.judul) + ".md";
+      document.body.appendChild(a); a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+    else if(act==="del"){ if(confirm("Hapus rancangan ini?")){ saveLib(loadLib().filter(x=>x.id!==id)); renderLib(); } }
+  }));
+}
+function doExport(){
+  const lib = loadLib();
+  if(!lib.length){ toast("Pustaka masih kosong"); return; }
+  const blob = new Blob([JSON.stringify(lib,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "pustaka-cerita-prompter.json";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("Pustaka diekspor ⬆️");
+}
+function doImport(file){
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const arr = JSON.parse(r.result);
+      if(!Array.isArray(arr)) throw new Error("format salah");
+      const cur = loadLib(), ids = new Set(cur.map(x=>x.id));
+      let n = 0;
+      arr.forEach(it=>{ if(it && it.cerita && !ids.has(it.id)){ cur.push(it); n++; } });
+      cur.sort((a,b)=>(b.ts||0)-(a.ts||0));
+      if(saveLib(cur)){ renderLib(); toast(n + " rancangan diimpor ⬇️"); }
+    }catch(e){ toast("File tidak valid"); }
+  };
+  r.readAsText(file);
+}
+
+/* ============ INIT ============ */
+document.addEventListener("DOMContentLoaded", ()=>{
+  renderAIRows(); renderLib();
+  $("charList").appendChild(charRow());
+  $("charList").appendChild(charRow());
+  $("btnAddChar").addEventListener("click", ()=>$("charList").appendChild(charRow()));
+  $("btnSample").addEventListener("click", isiContoh);
+  $("btnGenerate").addEventListener("click", doGenerate);
+  $("btnCopyCerita").addEventListener("click", ()=>copyText(lastCerita));
+  $("btnCopyImg").addEventListener("click", ()=>copyText(lastImg));
+  $("btnSave").addEventListener("click", doSave);
+  $("btnDownload").addEventListener("click", doDownload);
+  $("btnExport").addEventListener("click", doExport);
+  $("btnImport").addEventListener("click", ()=>$("fileImport").click());
+  $("fileImport").addEventListener("change", e=>{ if(e.target.files[0]) doImport(e.target.files[0]); e.target.value=""; });
+});
+</script>
+</body>
+</html>
+
