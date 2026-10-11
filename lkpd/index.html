@@ -197,6 +197,14 @@
     </div>
   </section>
 
+  <!-- 5. BENTUK LUARAN -->
+  <section class="card">
+    <h2><span class="num">5</span> Bentuk Luaran</h2>
+    <p class="desc">LKPD-nya mau dihasilkan AI dalam bentuk apa?</p>
+    <div class="opt-grid" id="luaranGrid"></div>
+    <div class="fase-preview" id="luaranPreview"></div>
+  </section>
+
   <div class="center">
     <button class="btn btn-primary gen-btn" id="btnGenerate" type="button">⚡ Generate Prompt LKPD</button>
   </div>
@@ -204,7 +212,7 @@
   <!-- OUTPUT -->
   <section class="card" id="outputCard">
     <h2><span class="num">✓</span> Prompt Siap Pakai</h2>
-    <p class="desc">Tempel prompt ini ke AI mana pun untuk membuat LKPD lengkap siap cetak.</p>
+    <p class="desc" id="outputDesc">Tempel prompt ini ke AI mana pun untuk membuat LKPD lengkap siap cetak.</p>
     <pre id="promptOut"></pre>
     <div class="out-actions">
       <button class="btn btn-navy btn-sm" id="btnCopy" type="button">📋 Salin Prompt</button>
@@ -257,6 +265,13 @@ const BENTUK_LBL = {
   pasangan:"berpasangan",
   individu:"individu"
 };
+const LUARAN = [
+  {id:"teks", nama:"\uD83D\uDCC4 Teks Siap Cetak", desk:"Teks terstruktur — tempel ke MS Word, cetak A4",
+   note:"AI akan membuat: teks LKPD terstruktur, siap ditempel ke MS Word & dicetak A4."},
+  {id:"html", nama:"\uD83C\uDF10 Web Interaktif", desk:"Satu file index.html — isi di HP/laptop/PID",
+   note:"AI akan membuat: SATU file index.html mandiri — murid mengisi langsung di HP/laptop/PID, bisa cetak/simpan PDF lalu kirim ke guru."}
+];
+const LUARAN_LBL = {teks:"Teks siap cetak (MS Word)", html:"Web interaktif (index.html)"};
 const AI_LIST = [
   {nama:"Muse", url:"https://muse.ai/"},
   {nama:"ChatGPT", url:"https://chatgpt.com/"},
@@ -295,6 +310,18 @@ function updateFasePreview(){
   const m = MODEL.find(x=>x.id===(document.querySelector('input[name=model]:checked')||{}).value) || MODEL[0];
   $("fasePreview").innerHTML = "<b>Alur "+m.nama+":</b> " + m.fase.map((f,i)=>(i+1)+". "+f).join(" → ");
 }
+function renderLuaran(){
+  $("luaranGrid").innerHTML = LUARAN.map((l,i)=>
+    '<label class="opt"><input type="radio" name="luaran" value="'+l.id+'"'+(i===0?" checked":"")+'>'+
+    '<span class="box"><span class="t">'+l.nama+'</span><span class="d">'+l.desk+'</span></span></label>'
+  ).join("");
+  document.querySelectorAll('input[name=luaran]').forEach(r=>r.addEventListener("change", updateLuaranPreview));
+  updateLuaranPreview();
+}
+function updateLuaranPreview(){
+  const l = LUARAN.find(x=>x.id===(document.querySelector('input[name=luaran]:checked')||{}).value) || LUARAN[0];
+  $("luaranPreview").innerHTML = "<b>Hasil:</b> " + l.note;
+}
 function renderAIButtons(){
   $("aiRow").innerHTML = AI_LIST.map((a,i)=>
     '<button class="btn btn-ghost btn-sm" type="button" data-ai="'+i+'">🚀 '+a.nama+'</button>').join("");
@@ -313,6 +340,7 @@ function isiContoh(){
   $("fMateri").value = "Bilangan Bulat"; $("fAlokasi").value = "2 × 40 menit";
   $("fBentuk").value = "kelompok";
   document.querySelector('input[name=model][value=saintifik]').checked = true; updateFasePreview();
+  document.querySelector('input[name=luaran][value=teks]').checked = true; updateLuaranPreview();
   $("fTP").value = "menentukan hasil operasi penjumlahan bilangan bulat melalui percobaan\nmenyimpulkan pola penjumlahan bilangan bulat dari hasil percobaan";
   ["kTujuan","kStimulus","kTabel","kTanya","kKunci","kRefleksi"].forEach(id=>$(id).checked = true);
   toast("Contoh terisi — silakan ubah lalu Generate");
@@ -326,6 +354,7 @@ function getForm(){
     judul: val("fJudul"), mapel: val("fMapel"), jenjang: val("fJenjang"), kelas: val("fKelas"),
     materi: val("fMateri"), alokasi: val("fAlokasi") || "disesuaikan",
     bentuk: val("fBentuk"), model,
+    luaran: (document.querySelector('input[name=luaran]:checked')||{}).value || "teks",
     tp: val("fTP").split("\n").map(s=>s.trim()).filter(Boolean),
     kTujuan: $("kTujuan").checked, kStimulus: $("kStimulus").checked, kTabel: $("kTabel").checked,
     kTanya: $("kTanya").checked, kKunci: $("kKunci").checked, kRefleksi: $("kRefleksi").checked
@@ -346,12 +375,13 @@ function validate(d){
 /* ============ BANGUN PROMPT ============ */
 function buildPrompt(d){
   const L = [];
-  L.push("🎯 BUAT LKPD");
+  L.push(d.luaran==="html" ? "🎯 BUAT LKPD INTERAKTIF (SATU FILE index.html)" : "🎯 BUAT LKPD");
   L.push(d.judul + " • " + d.mapel + " • " + d.jenjang + (d.kelas ? " Kelas " + d.kelas : "") + " • " + d.materi);
   L.push("");
   L.push("─── A. KONFIGURASI ───");
   L.push("Model pembelajaran : " + d.model.nama);
   L.push("Dikerjakan          : " + BENTUK_LBL[d.bentuk]);
+  L.push("Bentuk luaran       : " + (LUARAN_LBL[d.luaran] || d.luaran));
   L.push("Alokasi waktu       : " + d.alokasi);
   L.push("Bahasa              : Indonesia sederhana, kalimat perintah langsung ke murid (\"Amati…\", \"Diskusikan…\")");
   L.push("");
@@ -363,7 +393,7 @@ function buildPrompt(d){
   const next = ()=>String.fromCharCode(sec.charCodeAt(0)+1);
   if(d.kTujuan){
     L.push("─── " + sec + ". KEPALA LKPD ───");
-    L.push("Judul, identitas murid (nama/kelas/kelompok), tujuan LKPD (dari TP, bahasa murid), dan petunjuk pengerjaan bernomor yang jelas.");
+    L.push("Judul" + (d.luaran==="html" ? ", kolom identitas murid yang BISA DIKETIK LANGSUNG (nama, kelas/kelompok, tanggal)," : ", identitas murid (nama/kelas/kelompok),") + " tujuan LKPD (dari TP, bahasa murid), dan petunjuk pengerjaan bernomor yang jelas.");
     L.push(""); sec = next();
   }
   L.push("─── " + sec + ". AKTIVITAS INTI (" + d.model.nama.toUpperCase() + ") ───");
@@ -386,11 +416,28 @@ function buildPrompt(d){
     L.push("2–3 pertanyaan refleksi di akhir LKPD (apa yang dipelajari, bagian tersulit, tindak lanjut).");
     L.push(""); sec = next();
   }
-  L.push("─── " + sec + ". ATURAN ───");
-  L.push("1. Satu LKPD = satu tujuan utuh yang tercapai dalam " + d.alokasi + ".");
-  L.push("2. Murid BEKERJA (mengamati, mencoba, menulis), bukan hanya membaca — minimal 70% isi adalah aktivitas.");
-  L.push("3. Pertanyaan panduan menuntun, bukan menguji hafalan.");
-  L.push("4. Siap cetak A4: rapi, font terbaca, ruang jawab cukup.");
+  if(d.luaran==="html"){
+    L.push("─── " + sec + ". ATURAN ISI ───");
+    L.push("1. Satu LKPD = satu tujuan utuh yang tercapai dalam " + d.alokasi + ".");
+    L.push("2. Murid BEKERJA (mengamati, mencoba, mengetik), bukan hanya membaca — minimal 70% isi adalah aktivitas.");
+    L.push("3. Pertanyaan panduan menuntun, bukan menguji hafalan.");
+    L.push(""); sec = next();
+    L.push("─── " + sec + ". KONTRAK TEKNIS index.html ───");
+    L.push("1. SATU file HTML mandiri: seluruh CSS & JS di dalam file, TANPA CDN/library eksternal, dibuka offline langsung di HP, laptop/PC, maupun PID/layar sentuh besar. 0 console error.");
+    L.push("2. RESPONSIF: nyaman dibaca & diisi dari layar kecil (HP) sampai layar besar (PID); kolom isian & tombol cukup besar untuk sentuhan jari.");
+    L.push("3. Kepala LKPD memuat kolom identitas yang bisa diketik langsung: nama murid, kelas/kelompok, tanggal.");
+    L.push("4. SEMUA ruang jawab berupa kolom isian interaktif: input teks, textarea, checkbox/radio, dan tabel yang selnya bisa diketik — murid mengisi langsung di perangkat.");
+    L.push("5. Tombol besar \"\uD83D\uDDA8\uFE0F Cetak / Simpan PDF\" memanggil window.print(). CSS @media print WAJIB: sembunyikan tombol & bagian khusus guru; jawaban yang sudah diketik murid TETAP tercetak rapi.");
+    L.push("6. KUNCI & PEDOMAN SKOR (bila diminta) hanya untuk guru: taruh di bagian khusus yang tidak ikut tercetak dan tidak terlihat saat murid mengerjakan.");
+    L.push("7. Cantumkan catatan untuk murid: setelah selesai mengisi → Cetak/Simpan PDF → kirim file PDF ke guru (mis. via WhatsApp).");
+    L.push("8. Tampilan bersih & ramah anak: font terbaca, kontras cukup, tanpa animasi berlebihan.");
+  } else {
+    L.push("─── " + sec + ". ATURAN ───");
+    L.push("1. Satu LKPD = satu tujuan utuh yang tercapai dalam " + d.alokasi + ".");
+    L.push("2. Murid BEKERJA (mengamati, mencoba, menulis), bukan hanya membaca — minimal 70% isi adalah aktivitas.");
+    L.push("3. Pertanyaan panduan menuntun, bukan menguji hafalan.");
+    L.push("4. Siap cetak A4: rapi, font terbaca, ruang jawab cukup.");
+  }
   L.push("");
   L.push("─── LARANGAN ───");
   L.push("1. Dilarang ceramah terselubung — jangan menjelaskan materi panjang lebar di LKPD.");
@@ -406,6 +453,9 @@ function doGenerate(){
   if(!validate(d)) return;
   lastData = d;
   lastPrompt = buildPrompt(d);
+  $("outputDesc").textContent = d.luaran==="html"
+    ? "Tempel prompt ini ke AI untuk membuat SATU file index.html LKPD interaktif — murid mengisi di HP/laptop/PID, bisa cetak/simpan PDF lalu kirim ke guru."
+    : "Tempel prompt ini ke AI mana pun untuk membuat LKPD teks lengkap — siap ditempel ke MS Word & dicetak A4.";
   $("promptOut").textContent = lastPrompt;
   $("outputCard").classList.add("show");
   if($("outputCard").scrollIntoView) $("outputCard").scrollIntoView({behavior:"smooth", block:"start"});
@@ -451,7 +501,7 @@ function doSave(){
   if(!lastData){ toast("Generate dulu"); return; }
   const d = lastData, lib = loadLib();
   lib.unshift({id:"l"+Date.now().toString(36), judul:d.judul, mapel:d.mapel, model:d.model.nama,
-    ts:Date.now(), prompt:lastPrompt});
+    luaran:LUARAN_LBL[d.luaran]||d.luaran, ts:Date.now(), prompt:lastPrompt});
   if(saveLib(lib)){ renderLib(); toast("Tersimpan di Pustaka 💾"); }
 }
 function renderLib(){
@@ -463,7 +513,7 @@ function renderLib(){
   wrap.innerHTML = lib.map(it=>{
     const tgl = new Date(it.ts).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"});
     return '<div class="lib-item"><div class="meta"><div class="jt">'+esc(it.judul)+'</div>'+
-      '<div class="js">'+esc(it.model||"")+' • '+esc(it.mapel||"")+' • '+tgl+'</div></div>'+
+      '<div class="js">'+esc(it.model||"")+' • '+esc(it.mapel||"")+(it.luaran?' • '+esc(it.luaran):"")+' • '+tgl+'</div></div>'+
       '<div class="acts">'+
       '<button class="btn btn-navy btn-sm" data-act="view" data-id="'+it.id+'">👁️ Lihat</button>'+
       '<button class="btn btn-ghost btn-sm" data-act="dl" data-id="'+it.id+'">⬇️</button>'+
@@ -517,7 +567,7 @@ function doImport(file){
 
 /* ============ INIT ============ */
 document.addEventListener("DOMContentLoaded", ()=>{
-  renderModel(); renderAIButtons(); renderLib();
+  renderModel(); renderLuaran(); renderAIButtons(); renderLib();
   $("btnSample").addEventListener("click", isiContoh);
   $("btnGenerate").addEventListener("click", doGenerate);
   $("btnCopy").addEventListener("click", ()=>copyText(lastPrompt));
