@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poster Prompter — Generator Prompt Poster Edukasi</title>
+<style>
+  :root{
+    --navy:#1B2A4A; --navy2:#243b63; --gold:#F5B301; --gold2:#d99e00;
+    --bg:#F4F6FB; --card:#ffffff; --ink:#1e2a3a; --muted:#6b7a90;
+    --line:#e3e9f2; --green:#22c55e; --red:#ef4444; --radius:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.55;}
+  header.top{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 70%,#2f4a7d 100%);
+    color:#fff; padding:34px 20px 30px; text-align:center; position:sticky; top:0; z-index:50;
+    box-shadow:0 4px 18px rgba(27,42,74,.35);}
+  header.top h1{font-size:clamp(1.6rem,4vw,2.4rem); letter-spacing:.5px;}
+  header.top h1 .gold{color:var(--gold);}
+  header.top p{opacity:.88; margin-top:6px; font-size:clamp(.85rem,2.4vw,1rem);}
+  .badge{display:inline-block; background:rgba(245,179,1,.16); border:1px solid var(--gold);
+    color:var(--gold); font-size:.75rem; padding:3px 12px; border-radius:999px; margin-top:10px;}
+  main{max-width:980px; margin:0 auto; padding:24px 16px 90px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px; margin-bottom:20px; box-shadow:0 2px 10px rgba(27,42,74,.06);}
+  .card h2{font-size:1.15rem; color:var(--navy); margin-bottom:4px; display:flex; align-items:center; gap:8px;}
+  .card h2 .num{background:var(--navy); color:#fff; width:28px; height:28px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; flex:none;}
+  .card .desc{color:var(--muted); font-size:.88rem; margin-bottom:16px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+  @media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr;}}
+  label.f{display:block; font-weight:600; font-size:.88rem; margin-bottom:6px; color:var(--navy);}
+  label.f .req{color:var(--red);}
+  .hint{font-size:.78rem; color:var(--muted); margin-top:4px;}
+  input[type=text],input[type=number],select,textarea{
+    width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:.95rem; font-family:inherit; background:#fff; color:var(--ink);}
+  input:focus,select:focus,textarea:focus{outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(27,42,74,.12);}
+  textarea{min-height:74px; resize:vertical;}
+  input.invalid,select.invalid,textarea.invalid{border-color:var(--red); box-shadow:0 0 0 3px rgba(239,68,68,.12);}
+  .opt-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px;}
+  .opt{position:relative;}
+  .opt input{position:absolute; opacity:0; pointer-events:none;}
+  .opt .box{border:2px solid var(--line); border-radius:12px; padding:13px 12px; cursor:pointer;
+    transition:.15s; background:#fff; height:100%;}
+  .opt .box:hover{border-color:#b9c6da;}
+  .opt input:checked + .box{border-color:var(--navy); background:#eef3fb; box-shadow:0 0 0 3px rgba(27,42,74,.12);}
+  .opt .box .t{font-weight:700; font-size:.92rem; color:var(--navy);}
+  .opt .box .d{font-size:.8rem; color:var(--muted); margin-top:3px;}
+  .checks{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  @media(max-width:560px){.checks{grid-template-columns:1fr;}}
+  .chk{display:flex; gap:10px; align-items:flex-start; background:#f8fafd; border:1px solid var(--line);
+    border-radius:10px; padding:10px 12px; cursor:pointer; font-size:.88rem;}
+  .chk input{margin-top:3px; width:17px; height:17px; accent-color:var(--navy); flex:none;}
+  .chk small{display:block; color:var(--muted); font-size:.78rem;}
+  .swatches{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;}
+  .sw{width:64px; cursor:pointer; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:#fff; position:relative;}
+  .sw input{position:absolute; opacity:0; pointer-events:none;}
+  .sw .bars{display:flex; height:34px;}
+  .sw .bars span{flex:1;}
+  .sw .nm{font-size:.68rem; text-align:center; padding:4px 2px; color:var(--muted); display:block;}
+  .sw input:checked ~ .bars{outline:2px solid var(--navy); outline-offset:-2px;}
+  .sw input:checked ~ .nm{color:var(--navy); font-weight:700;}
+  .color-row{display:flex; gap:12px; flex-wrap:wrap;}
+  .color-row .cf{display:flex; align-items:center; gap:8px; font-size:.85rem;}
+  .color-row input[type=color]{width:44px; height:36px; border:1px solid var(--line); border-radius:8px; padding:2px; background:#fff;}
+  .btn{display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; font-family:inherit;
+    font-weight:700; border-radius:12px; padding:13px 26px; font-size:1rem; transition:.15s;}
+  .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--navy); box-shadow:0 4px 14px rgba(245,179,1,.4);}
+  .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(245,179,1,.5);}
+  .btn-navy{background:var(--navy); color:#fff;}
+  .btn-navy:hover{background:var(--navy2);}
+  .btn-ghost{background:#fff; color:var(--navy); border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--navy);}
+  .btn-sm{padding:8px 14px; font-size:.85rem; border-radius:9px;}
+  .btn-danger{background:#fee2e2; color:#b91c1c; border:1px solid #fecaca;}
+  .center{text-align:center; margin:26px 0 8px;}
+  .gen-btn{font-size:1.15rem; padding:16px 44px;}
+  #outputCard{display:none;}
+  #outputCard.show{display:block; animation:fadeUp .35s ease;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(12px);}to{opacity:1; transform:none;}}
+  .out-block{margin-bottom:16px;}
+  .block-label{font-size:.8rem; font-weight:700; color:var(--navy); margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;}
+  pre#promptKonten{background:#0f1b30; color:#dbe7ff; border-radius:12px; padding:18px; font-size:.82rem;
+    line-height:1.6; max-height:420px; overflow:auto; white-space:pre-wrap; word-wrap:break-word;
+    font-family:"Cascadia Code",Consolas,"Courier New",monospace;}
+  .prompt-img{background:#f0fdf4; border:1px solid #bbf7d0; color:#14532d; border-radius:12px; padding:14px 16px;
+    font-size:.85rem; line-height:1.6; white-space:pre-wrap; word-wrap:break-word;}
+  .out-actions{display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 4px;}
+  .lib-item{border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:10px;
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:#fbfcff;}
+  .lib-item .meta{flex:1; min-width:200px;}
+  .lib-item .meta .jt{font-weight:700; color:var(--navy);}
+  .lib-item .meta .js{font-size:.8rem; color:var(--muted);}
+  .lib-item .acts{display:flex; gap:6px; flex-wrap:wrap;}
+  .empty-lib{text-align:center; color:var(--muted); padding:26px 10px; font-size:.9rem;}
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+    background:var(--navy); color:#fff; padding:12px 22px; border-radius:999px; font-size:.9rem;
+    opacity:0; transition:.25s; z-index:200; box-shadow:0 6px 20px rgba(0,0,0,.25); pointer-events:none;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  footer{background:var(--navy); color:#cdd8ea; text-align:center; padding:22px 16px; font-size:.88rem;}
+  footer .gold{color:var(--gold); font-weight:700;}
+  .sample-link{background:none; border:none; color:var(--navy); font-size:.82rem; cursor:pointer;
+    text-decoration:underline; font-family:inherit; padding:0;}
+  .sec-head-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:4px;}
+  .ai-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .ai-label{font-size:.85rem; font-weight:700; color:var(--navy); margin-top:16px;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>🖼️ Poster <span class="gold">Prompter</span></h1>
+  <p>Generator prompt poster edukasi — konten, layout &amp; ilustrasi siap tempel</p>
+  <span class="badge">Dua keluaran: prompt konten (AI chat) + prompt ilustrasi (AI gambar)</span>
+</header>
+
+<main>
+  <!-- 1. ISI -->
+  <section class="card">
+    <div class="sec-head-row">
+      <h2><span class="num">1</span> Isi Poster</h2>
+      <button class="sample-link" id="btnSample" type="button">✨ isi contoh cepat</button>
+    </div>
+    <p class="desc">Pesan yang ingin disampaikan poster ini.</p>
+    <div class="grid2">
+      <div>
+        <label class="f" for="fJudul">Judul poster <span class="req">*</span></label>
+        <input type="text" id="fJudul" placeholder="cth: Ayo Hemat Air!">
+      </div>
+      <div>
+        <label class="f" for="fTarget">Target pembaca</label>
+        <select id="fTarget">
+          <option>Murid SD</option>
+          <option>Murid SMP</option>
+          <option>Murid SMA/SMK</option>
+          <option>Anak PAUD/TK</option>
+          <option>Orang tua</option>
+          <option>Guru</option>
+          <option>Umum</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fMapel">Mata pelajaran <span class="req">*</span></label>
+        <input type="text" id="fMapel" placeholder="cth: IPAS">
+      </div>
+      <div>
+        <label class="f" for="fJenjang">Jenjang / Kelas</label>
+        <select id="fJenjang">
+          <option>TK/PAUD</option><option selected>SD</option><option>SMP</option><option>SMA</option><option>SMK</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <label class="f" for="fPesan">Pesan utama <span class="req">*</span></label>
+      <textarea id="fPesan" placeholder="Tulis 3–5 poin singkat, satu baris satu poin. Contoh:&#10;Matikan keran saat menggosok gigi&#10;Gunakan air bekas cucian beras untuk menyiram tanaman&#10;Laporkan keran bocor ke guru piket"></textarea>
+    </div>
+    <div style="margin-top:14px">
+      <label class="f" for="fTP">Tujuan Pembelajaran (jangkar)</label>
+      <textarea id="fTP" style="min-height:56px" placeholder="Tulis 1–2 TP terkait, pastikan dari CP/ATP atau Panduan Mapel"></textarea>
+    </div>
+  </section>
+
+  <!-- 2. UKURAN -->
+  <section class="card">
+    <h2><span class="num">2</span> Ukuran</h2>
+    <p class="desc">Pilih ukuran poster — komposisi layout menyesuaikan otomatis.</p>
+    <div class="opt-grid" id="ukuranGrid"></div>
+  </section>
+
+  <!-- 3. DESAIN -->
+  <section class="card">
+    <h2><span class="num">3</span> Desain Warna</h2>
+    <p class="desc">Rasa visual posternya.</p>
+    <div class="grid2">
+      <div>
+        <label class="f" for="fGaya">Gaya visual</label>
+        <select id="fGaya">
+          <option value="infografis">Infografis modern</option>
+          <option value="flat">Flat illustration ceria</option>
+          <option value="minimalis">Minimalis elegan</option>
+          <option value="kartun">Kartun anak</option>
+          <option value="nusantara">Nusantara / batik</option>
+          <option value="foto">Foto-realistis hangat</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fMood">Suasana</label>
+        <select id="fMood">
+          <option>Ceria &amp; menyemangati</option>
+          <option>Tenang &amp; meyakinkan</option>
+          <option>Tegas &amp; mengingatkan</option>
+          <option>Hangat &amp; kekeluargaan</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <label class="f">Palet warna</label>
+      <div class="swatches" id="paletWrap"></div>
+      <div class="color-row">
+        <span class="cf">Primer <input type="color" id="cPrimer" value="#1B7A4B"></span>
+        <span class="cf">Sekunder <input type="color" id="cSekunder" value="#38BDF8"></span>
+        <span class="cf">Aksen <input type="color" id="cAksen" value="#F5B301"></span>
+      </div>
+      <div class="hint">Memilih preset mengisi tiga warna di atas — tetap bisa diubah manual.</div>
+    </div>
+  </section>
+
+  <!-- 4. ELEMEN & FOOTER -->
+  <section class="card">
+    <h2><span class="num">4</span> Elemen &amp; Footer Poster</h2>
+    <p class="desc">Pelengkap yang tampil di poster (bukan footer aplikasi).</p>
+    <div class="checks">
+      <label class="chk"><input type="checkbox" id="eLogo" checked>
+        <span><b>Logo sekolah</b><small>Ruang khusus logo di sudut atas poster</small></span></label>
+      <label class="chk"><input type="checkbox" id="eQR">
+        <span><b>QR code</b><small>Menuju link/tautan — isi di bawah bila dicentang</small></span></label>
+      <label class="chk"><input type="checkbox" id="eCTA" checked>
+        <span><b>Ajakan (call-to-action)</b><small>Kalimat ajakan di bagian bawah poster</small></span></label>
+      <label class="chk"><input type="checkbox" id="eKredit" checked>
+        <span><b>Kredit pembuat</b><small>Nama guru/satuan pendidikan di footer poster</small></span></label>
+    </div>
+    <div class="grid2" style="margin-top:14px">
+      <div>
+        <label class="f" for="fQRLink">Link QR code</label>
+        <input type="text" id="fQRLink" placeholder="cth: https://... (kosongkan bila tidak pakai QR)">
+      </div>
+      <div>
+        <label class="f" for="fFooter">Teks footer poster</label>
+        <input type="text" id="fFooter" placeholder="cth: SMPN 1 Punggur • Gerakan Sekolah Sehat">
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <label class="f" for="fNama">Nama guru (kredit)</label>
+      <input type="text" id="fNama" placeholder="cth: Pak Gun">
+    </div>
+  </section>
+
+  <div class="center">
+    <button class="btn btn-primary gen-btn" id="btnGenerate" type="button">⚡ Generate Prompt Poster</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <section class="card" id="outputCard">
+    <h2><span class="num">✓</span> Prompt Siap Pakai</h2>
+    <p class="desc">Dua prompt: <b>konten &amp; layout</b> untuk AI chat (→ Canva), dan <b>ilustrasi</b> untuk AI gambar.</p>
+    <div class="out-block">
+      <div class="block-label">📝 Prompt konten &amp; layout — tempel ke AI chat</div>
+      <pre id="promptKonten"></pre>
+      <div class="out-actions">
+        <button class="btn btn-navy btn-sm" id="btnCopyKonten" type="button">📋 Salin prompt konten</button>
+      </div>
+    </div>
+    <div class="out-block">
+      <div class="block-label">🎨 Prompt ilustrasi — tempel ke AI gambar (Inggris, tanpa teks)</div>
+      <div class="prompt-img" id="promptImg"></div>
+      <div class="out-actions">
+        <button class="btn btn-navy btn-sm" id="btnCopyImg" type="button">📋 Salin prompt ilustrasi</button>
+      </div>
+    </div>
+    <div class="out-actions">
+      <button class="btn btn-ghost btn-sm" id="btnSave" type="button">💾 Simpan ke Pustaka</button>
+      <button class="btn btn-ghost btn-sm" id="btnDownload" type="button">⬇️ Unduh .md</button>
+    </div>
+    <div class="ai-label">🚀 Kirim prompt konten ke AI chat</div>
+    <div class="ai-row" id="aiRow"></div>
+    <div class="ai-label">🎨 Buka AI gambar</div>
+    <div class="ai-row" id="imgRow"></div>
+  </section>
+
+  <!-- PUSTAKA -->
+  <section class="card">
+    <div class="sec-head-row">
+      <h2><span class="num">📚</span> Pustaka Poster Saya</h2>
+      <div>
+        <button class="btn btn-ghost btn-sm" id="btnExport" type="button">⬆️ Ekspor JSON</button>
+        <button class="btn btn-ghost btn-sm" id="btnImport" type="button">⬇️ Impor JSON</button>
+        <input type="file" id="fileImport" accept="application/json" style="display:none">
+      </div>
+    </div>
+    <p class="desc">Semua rancangan poster tersimpan otomatis di perangkat ini.</p>
+    <div id="libList"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="gold">🖼️ Poster Prompter</div>
+  <div style="margin-top:6px">@2026 GezyTech Prompter. Dikembangkan oleh PakGun</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============ DATA ============ */
+const UKURAN = [
+  {id:"a4", nama:"A4 Portrait", desk:"210 × 297 mm — cetak umum", orient:"portrait"},
+  {id:"a3", nama:"A3 Portrait", desk:"297 × 420 mm — mading", orient:"portrait"},
+  {id:"a2", nama:"A2 Portrait", desk:"420 × 594 mm — banner kelas", orient:"portrait"},
+  {id:"f4", nama:"F4 / Folio", desk:"215 × 330 mm — kertas folio", orient:"portrait"},
+  {id:"169", nama:"16:9 Digital", desk:"1920 × 1080 px — PID / TV", orient:"landscape"},
+  {id:"916", nama:"9:16 Story", desk:"1080 × 1920 px — HP / status", orient:"portrait"},
+  {id:"11", nama:"1:1 Feed", desk:"1080 × 1080 px — sosmed", orient:"square"}
+];
+
+const GAYA_IMG = {
+  infografis: "modern infographic style, clean vector shapes, data-friendly",
+  flat: "cheerful flat vector illustration, playful, bright",
+  minimalis: "elegant minimalist style, lots of whitespace, refined",
+  kartun: "cute cartoon style for kids, big expressive characters",
+  nusantara: "Indonesian nusantara art style with subtle batik pattern accents",
+  foto: "warm photorealistic style, natural lighting"
+};
+
+const PALET = [
+  {nama:"Hemat Air", p:"#1B7A4B", s:"#38BDF8", a:"#F5B301"},
+  {nama:"Navy Emas", p:"#1B2A4A", s:"#22D3EE", a:"#F5B301"},
+  {nama:"Ceria Anak", p:"#6D28D9", s:"#F472B6", a:"#FACC15"},
+  {nama:"Alam", p:"#14532D", s:"#4ADE80", a:"#FDE047"},
+  {nama:"Senja", p:"#7C2D12", s:"#FB923C", a:"#FDE68A"},
+  {nama:"Monokrom", p:"#111827", s:"#6B7280", a:"#F59E0B"}
+];
+
+const AI_LIST = [
+  {nama:"Muse", url:"https://muse.ai/"},
+  {nama:"ChatGPT", url:"https://chatgpt.com/"},
+  {nama:"Claude", url:"https://claude.ai/"},
+  {nama:"Gemini", url:"https://gemini.google.com/"},
+  {nama:"DeepSeek", url:"https://chat.deepseek.com/"}
+];
+
+const IMG_AI = [
+  {nama:"Ideogram", url:"https://ideogram.ai/", desk:"Terbaik untuk teks di gambar"},
+  {nama:"Designer", url:"https://designer.microsoft.com/", desk:"Gratis (DALL-E 3)"},
+  {nama:"Leonardo", url:"https://leonardo.ai/", desk:"Free tier"},
+  {nama:"Firefly", url:"https://firefly.adobe.com/", desk:"Free tier Adobe"},
+  {nama:"Canva", url:"https://www.canva.com/", desk:"Magic Media + template"}
+];
+
+const LS_KEY = "posterPrompter.library.v1";
+</script>
+
+<script>
+"use strict";
+/* ============ HELPERS ============ */
+const $ = id => document.getElementById(id);
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+function esc(s){ return String(s==null?"":s); }
+
+/* ============ RENDER ============ */
+function renderUkuran(){
+  $("ukuranGrid").innerHTML = UKURAN.map((u,i)=>
+    '<label class="opt"><input type="radio" name="ukuran" value="'+u.id+'"'+(i===0?" checked":"")+'>'+
+    '<span class="box"><span class="t">'+u.nama+'</span><span class="d" style="display:block">'+u.desk+'</span></span></label>'
+  ).join("");
+}
+function renderPalet(){
+  $("paletWrap").innerHTML = PALET.map((pl,i)=>
+    '<label class="sw"><input type="radio" name="palet" value="'+i+'"'+(i===0?" checked":"")+'>'+
+    '<span class="bars"><span style="background:'+pl.p+'"></span><span style="background:'+pl.s+'"></span><span style="background:'+pl.a+'"></span></span>'+
+    '<span class="nm">'+pl.nama+'</span></label>'
+  ).join("");
+  document.querySelectorAll('input[name=palet]').forEach(r=>r.addEventListener("change",()=>{
+    const pl = PALET[+r.value];
+    $("cPrimer").value = pl.p; $("cSekunder").value = pl.s; $("cAksen").value = pl.a;
+  }));
+}
+function renderAIRows(){
+  $("aiRow").innerHTML = AI_LIST.map((a,i)=>
+    '<button class="btn btn-ghost btn-sm" type="button" data-ai="'+i+'">🚀 '+a.nama+'</button>').join("");
+  $("aiRow").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    const ai = AI_LIST[+b.getAttribute("data-ai")];
+    window.open(ai.url, "_blank", "noopener");
+    copyText(lastKonten); toast("Membuka "+ai.nama+" — prompt tersalin 📋");
+  }));
+  $("imgRow").innerHTML = IMG_AI.map((a,i)=>
+    '<button class="btn btn-ghost btn-sm" type="button" data-img="'+i+'" title="'+a.desk+'">🎨 '+a.nama+'</button>').join("");
+  $("imgRow").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    const ai = IMG_AI[+b.getAttribute("data-img")];
+    window.open(ai.url, "_blank", "noopener");
+    copyText(lastImg); toast("Membuka "+ai.nama+" — prompt ilustrasi tersalin 📋");
+  }));
+}
+
+/* ============ CONTOH ============ */
+function isiContoh(){
+  $("fJudul").value = "Ayo Hemat Air!";
+  $("fTarget").value = "Murid SD";
+  $("fMapel").value = "IPAS"; $("fJenjang").value = "SD";
+  $("fPesan").value = "Matikan keran saat menggosok gigi\nGunakan air bekas cucian beras untuk menyiram tanaman\nLaporkan keran bocor ke guru piket";
+  $("fTP").value = "memahami pentingnya menghemat air dalam kehidupan sehari-hari";
+  document.querySelector('input[name=ukuran][value="a3"]').checked = true;
+  $("fGaya").value = "flat"; $("fMood").value = "Ceria & menyemangati";
+  $("eQR").checked = true; $("fQRLink").value = "https://sekolah.example.id/hemat-air";
+  $("fFooter").value = "SDN 1 Punggur • Gerakan Sekolah Sehat";
+  $("fNama").value = "Pak Gun";
+  toast("Contoh terisi — silakan ubah lalu Generate");
+}
+
+/* ============ FORM ============ */
+function getForm(){
+  const val = id => $(id).value.trim();
+  const ukuran = UKURAN.find(u=>u.id===(document.querySelector('input[name=ukuran]:checked')||{}).value) || UKURAN[0];
+  return {
+    judul: val("fJudul"), target: val("fTarget"), mapel: val("fMapel"), jenjang: val("fJenjang"),
+    pesan: val("fPesan").split("\n").map(s=>s.trim()).filter(Boolean),
+    tp: val("fTP"), ukuran,
+    gaya: val("fGaya"), gayaLbl: $("fGaya").options[$("fGaya").selectedIndex].text,
+    mood: val("fMood"),
+    cPrimer: $("cPrimer").value, cSekunder: $("cSekunder").value, cAksen: $("cAksen").value,
+    eLogo: $("eLogo").checked, eQR: $("eQR").checked, eCTA: $("eCTA").checked, eKredit: $("eKredit").checked,
+    qrLink: val("fQRLink"), footer: val("fFooter"), nama: val("fNama")
+  };
+}
+function validate(d){
+  let ok = true;
+  [["fJudul",d.judul],["fMapel",d.mapel]].forEach(([id,v])=>{
+    $(id).classList.toggle("invalid", !v); if(!v) ok = false;
+  });
+  if(!d.pesan.length){ $("fPesan").classList.add("invalid"); ok = false; }
+  else $("fPesan").classList.remove("invalid");
+  if(!ok) toast("Lengkapi: judul, mapel, dan pesan utama");
+  return ok;
+}
+
+/* ============ BANGUN PROMPT ============ */
+function buildKonten(d){
+  const L = [];
+  L.push("🎯 PROMPT PEMBUAT POSTER EDUKASI");
+  L.push(d.judul);
+  L.push("");
+  L.push("Buatkan naskah + spesifikasi desain poster edukasi siap pakai. Tempel seluruh prompt ini ke AI.");
+  L.push("");
+  L.push("─── A. KONFIGURASI ───");
+  L.push("Judul poster   : " + d.judul);
+  L.push("Target pembaca : " + d.target + " (gunakan bahasa & contoh yang cocok untuk mereka)");
+  L.push("Ukuran         : " + d.ukuran.nama + " (" + d.ukuran.desk + ")");
+  L.push("Gaya visual    : " + d.gayaLbl + " — suasana " + d.mood);
+  L.push("Palet warna    : primer " + d.cPrimer + ", sekunder " + d.cSekunder + ", aksen " + d.cAksen + " (gunakan kode hex persis ini)");
+  L.push("");
+  L.push("─── B. JANGKAR KURIKULUM ───");
+  L.push("Mapel/Jenjang: " + d.mapel + " / " + d.jenjang + ".");
+  if(d.tp) L.push("Tujuan Pembelajaran (dari CP/ATP atau Panduan Mapel — jangan diubah maknanya): " + d.tp);
+  else L.push("Tujuan Pembelajaran: [AI merumuskan 1–2 TP yang relevan dari CP/ATP atau Panduan Mapel]");
+  L.push("Pesan utama yang WAJIB tersampaikan (boleh diringkas, jangan ditambah fakta baru):");
+  d.pesan.forEach(p=>L.push("  - " + p));
+  L.push("");
+  L.push("─── C. STRUKTUR KONTEN POSTER ───");
+  L.push("Susun dengan hierarki visual yang jelas, dari atas ke bawah:");
+  L.push("1. HEADLINE — buatkan 3 opsi judul besar (maks 5 kata tiap opsi), pilih 1 yang terbaik dan tandai ⭐");
+  L.push("2. SUBHEADLINE — 1 kalimat penjelas (maks 12 kata)");
+  L.push("3. ISI — " + d.pesan.length + " poin dari pesan utama, tiap poin MAKSIMAL 8 kata + 1 ikon yang cocok (tulis nama ikonnya, mis. 💧🚰🌱)");
+  if(d.eCTA) L.push("4. AJAKAN (call-to-action) — 1 kalimat ajakan yang kuat dan positif");
+  if(d.eLogo) L.push("5. LOGO — beri ruang kosong untuk logo sekolah di sudut atas");
+  if(d.eQR && d.qrLink) L.push("6. QR CODE — sertakan catatan 'QR menuju: " + d.qrLink + "' di dekat footer");
+  else if(d.eQR) L.push("6. QR CODE — beri ruang untuk QR di dekat footer");
+  L.push("7. FOOTER — teks persis: \"" + (d.footer || "[Nama satuan pendidikan]") + "\"" + (d.eKredit && d.nama ? " + kredit \"" + d.nama + "\"" : ""));
+  L.push("");
+  L.push("─── D. SPESIFIKASI DESAIN ───");
+  L.push("- Komposisi " + d.ukuran.orient + " untuk " + d.ukuran.nama + ": headline 25% area atas, isi 55% tengah, footer 20% bawah.");
+  L.push("- Font: 2 jenis saja — 1 tebal playful untuk headline, 1 bersih untuk isi. Ukuran headline minimal 3× ukuran isi.");
+  L.push("- Kontras teks-latar minimal 4.5:1. Jangan menaruh teks di atas gambar yang ramai.");
+  L.push("- Ruang kosong (whitespace) minimal 20% — jangan penuhi sampai sesak.");
+  L.push("- Ilustrasi utama: 1 gambar besar yang menggambarkan pesan (bukan hiasan acak).");
+  L.push("");
+  L.push("─── E. ATURAN ───");
+  L.push("1. Bahasa Indonesia sederhana sesuai " + d.target + ".");
+  L.push("2. Total kata di poster MAKSIMAL 60 kata (tidak termasuk footer).");
+  L.push("3. Dilarang typo — ejaan harus sempurna.");
+  L.push("4. Dilarang menambah fakta/ilmu baru di luar pesan utama di atas.");
+  L.push("5. Keluaran: (1) naskah poster per bagian, (2) spesifikasi desain (warna hex, font, komposisi) siap dibawa ke Canva.");
+  return L.join("\n");
+}
+function buildImg(d){
+  const parts = [
+    GAYA_IMG[d.gaya],
+    "illustration about: " + d.pesan.slice(0,3).join("; "),
+    "for " + d.target.toLowerCase(),
+    "color palette " + d.cPrimer + ", " + d.cSekunder + ", " + d.cAksen,
+    d.ukuran.orient + " composition",
+    "no text, no letters, no words, no watermark"
+  ];
+  return parts.join(", ") + ".";
+}
+
+/* ============ GENERATE & OUTPUT ============ */
+let lastKonten = "", lastImg = "", lastData = null;
+function doGenerate(){
+  const d = getForm();
+  if(!validate(d)) return;
+  lastData = d;
+  lastKonten = buildKonten(d);
+  lastImg = buildImg(d);
+  $("promptKonten").textContent = lastKonten;
+  $("promptImg").textContent = lastImg;
+  $("outputCard").classList.add("show");
+  if($("outputCard").scrollIntoView) $("outputCard").scrollIntoView({behavior:"smooth", block:"start"});
+  toast("Prompt poster berhasil dibuat ⚡");
+}
+function copyText(t){
+  if(!t){ toast("Generate dulu"); return; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>toast("Tersalin 📋")).catch(()=>fallbackCopy(t));
+  } else fallbackCopy(t);
+}
+function fallbackCopy(t){
+  const ta = document.createElement("textarea");
+  ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toast("Tersalin 📋"); }
+  catch(e){ toast("Gagal menyalin"); }
+  document.body.removeChild(ta);
+}
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60) || "poster"; }
+function doDownload(){
+  if(!lastKonten){ toast("Generate dulu"); return; }
+  const md = "# Poster: " + lastData.judul + "\n\n## Prompt Konten & Layout\n\n```\n" + lastKonten + "\n```\n\n## Prompt Ilustrasi\n\n```\n" + lastImg + "\n```\n";
+  const blob = new Blob([md], {type:"text/markdown;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = slug(lastData.judul) + ".md";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("File .md diunduh ⬇️");
+}
+
+/* ============ PUSTAKA ============ */
+function loadLib(){
+  try{ const raw = localStorage.getItem(LS_KEY); const arr = raw ? JSON.parse(raw) : []; return Array.isArray(arr) ? arr : []; }
+  catch(e){ return []; }
+}
+function saveLib(arr){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(arr)); return true; }
+  catch(e){ toast("Penyimpanan penuh / tidak tersedia"); return false; }
+}
+function doSave(){
+  if(!lastData){ toast("Generate dulu"); return; }
+  const d = lastData, lib = loadLib();
+  lib.unshift({id:"s"+Date.now().toString(36), judul:d.judul, mapel:d.mapel,
+    ukuran:d.ukuran.nama, ts:Date.now(), konten:lastKonten, img:lastImg, form:{
+      target:d.target, jenjang:d.jenjang, pesan:d.pesan.join("\n"), tp:d.tp, gaya:d.gaya,
+      mood:d.mood, cPrimer:d.cPrimer, cSekunder:d.cSekunder, cAksen:d.cAksen,
+      eLogo:d.eLogo, eQR:d.eQR, eCTA:d.eCTA, eKredit:d.eKredit,
+      qrLink:d.qrLink, footer:d.footer, nama:d.nama, ukuranId:d.ukuran.id
+    }});
+  if(saveLib(lib)){ renderLib(); toast("Tersimpan di Pustaka 💾"); }
+}
+function renderLib(){
+  const lib = loadLib(), wrap = $("libList");
+  if(!lib.length){
+    wrap.innerHTML = '<div class="empty-lib">📭 Belum ada poster tersimpan.<br>Generate lalu tekan <b>💾 Simpan ke Pustaka</b>.</div>';
+    return;
+  }
+  wrap.innerHTML = lib.map(it=>{
+    const tgl = new Date(it.ts).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"});
+    return '<div class="lib-item"><div class="meta"><div class="jt">'+esc(it.judul)+'</div>'+
+      '<div class="js">'+esc(it.mapel||"")+' • '+esc(it.ukuran||"")+' • '+tgl+'</div></div>'+
+      '<div class="acts">'+
+      '<button class="btn btn-navy btn-sm" data-act="view" data-id="'+it.id+'">👁️ Lihat</button>'+
+      '<button class="btn btn-ghost btn-sm" data-act="dl" data-id="'+it.id+'">⬇️</button>'+
+      '<button class="btn btn-danger btn-sm" data-act="del" data-id="'+it.id+'">🗑️</button>'+
+      '</div></div>';
+  }).join("");
+  wrap.querySelectorAll("button[data-act]").forEach(b=>b.addEventListener("click",()=>{
+    const id = b.getAttribute("data-id"), act = b.getAttribute("data-act");
+    const it = loadLib().find(x=>x.id===id); if(!it) return;
+    if(act==="view"){
+      lastKonten = it.konten; lastImg = it.img; lastData = {judul: it.judul};
+      $("promptKonten").textContent = it.konten; $("promptImg").textContent = it.img;
+      $("outputCard").classList.add("show");
+      if($("outputCard").scrollIntoView) $("outputCard").scrollIntoView({behavior:"smooth", block:"start"});
+    }
+    else if(act==="dl"){
+      const md = "# Poster: " + it.judul + "\n\n## Prompt Konten & Layout\n\n```\n" + it.konten + "\n```\n\n## Prompt Ilustrasi\n\n```\n" + it.img + "\n```\n";
+      const blob = new Blob([md], {type:"text/markdown;charset=utf-8"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = slug(it.judul) + ".md";
+      document.body.appendChild(a); a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+    else if(act==="del"){ if(confirm("Hapus rancangan ini?")){ saveLib(loadLib().filter(x=>x.id!==id)); renderLib(); } }
+  }));
+}
+function doExport(){
+  const lib = loadLib();
+  if(!lib.length){ toast("Pustaka masih kosong"); return; }
+  const blob = new Blob([JSON.stringify(lib,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "pustaka-poster-prompter.json";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("Pustaka diekspor ⬆️");
+}
+function doImport(file){
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const arr = JSON.parse(r.result);
+      if(!Array.isArray(arr)) throw new Error("format salah");
+      const cur = loadLib(), ids = new Set(cur.map(x=>x.id));
+      let n = 0;
+      arr.forEach(it=>{ if(it && it.konten && !ids.has(it.id)){ cur.push(it); n++; } });
+      cur.sort((a,b)=>(b.ts||0)-(a.ts||0));
+      if(saveLib(cur)){ renderLib(); toast(n + " rancangan diimpor ⬇️"); }
+    }catch(e){ toast("File tidak valid"); }
+  };
+  r.readAsText(file);
+}
+
+/* ============ INIT ============ */
+document.addEventListener("DOMContentLoaded", ()=>{
+  renderUkuran(); renderPalet(); renderAIRows(); renderLib();
+  $("btnSample").addEventListener("click", isiContoh);
+  $("btnGenerate").addEventListener("click", doGenerate);
+  $("btnCopyKonten").addEventListener("click", ()=>copyText(lastKonten));
+  $("btnCopyImg").addEventListener("click", ()=>copyText(lastImg));
+  $("btnSave").addEventListener("click", doSave);
+  $("btnDownload").addEventListener("click", doDownload);
+  $("btnExport").addEventListener("click", doExport);
+  $("btnImport").addEventListener("click", ()=>$("fileImport").click());
+  $("fileImport").addEventListener("change", e=>{ if(e.target.files[0]) doImport(e.target.files[0]); e.target.value=""; });
+});
+</script>
+</body>
+</html>
+
