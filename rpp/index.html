@@ -649,10 +649,8 @@ function strukturDokumen(d){
 function buildPrompt(d){
   const jenisNama = JENIS.find(j=>j.id===d.jenis).nama;
   const L = [];
-  L.push("🎯 PROMPT PEMBUAT " + jenisNama.toUpperCase());
+  L.push("🎯 BUAT " + jenisNama.toUpperCase());
   L.push(d.mapel + " • " + d.materi + " • " + d.jenjang + (d.kelas ? " Kelas " + d.kelas : ""));
-  L.push("");
-  L.push("Tempel seluruh prompt ini ke AI. Semua konfigurasi sudah terisi — AI tinggal menyusun dokumennya.");
   L.push("");
   L.push("─── A. KONFIGURASI ───");
   L.push("Jenis dokumen     : " + jenisNama);
