@@ -184,16 +184,16 @@
   <!-- OUTPUT -->
   <section class="card" id="outputCard">
     <h2><span class="num">✓</span> Prompt Siap Pakai</h2>
-    <p class="desc">Dua prompt: <b>naskah cerita</b> untuk AI chat, dan <b>ilustrasi per halaman</b> untuk AI gambar.</p>
+    <p class="desc"><b>Langkah 1:</b> tempel prompt naskah ke AI chat → dapat cerita per halaman (teks saja, tanpa gambar).<br><b>Langkah 2:</b> untuk tiap halaman, tempel template ilustrasi + teks halaman itu ke AI gambar <b>dalam satu sesi chat yang sama</b> agar tokoh konsisten.</p>
     <div class="out-block">
-      <div class="block-label">📝 Prompt naskah cerita — tempel ke AI chat</div>
+      <div class="block-label">📝 Prompt naskah cerita — tempel ke AI chat (teks saja)</div>
       <pre id="promptCerita"></pre>
       <div class="out-actions">
         <button class="btn btn-navy btn-sm" id="btnCopyCerita" type="button">📋 Salin prompt naskah</button>
       </div>
     </div>
     <div class="out-block">
-      <div class="block-label">🎨 Prompt ilustrasi — tempel ke AI gambar (Inggris, tanpa teks)</div>
+      <div class="block-label">🎨 Template prompt ilustrasi — gabung dengan teks tiap halaman di AI gambar</div>
       <div class="prompt-img" id="promptImg"></div>
       <div class="out-actions">
         <button class="btn btn-navy btn-sm" id="btnCopyImg" type="button">📋 Salin prompt ilustrasi</button>
@@ -357,9 +357,10 @@ function buildCerita(d){
   L.push("");
   L.push("─── B. STRUKTUR " + d.hal + " HALAMAN ───");
   L.push("Bagi cerita menjadi " + d.hal + " halaman mengikuti alur: pembuka (perkenalan tokoh & dunia) → masalah/tantangan → usaha & bantuan → penyelesaian → penutup hangat.");
-  L.push("Untuk TIAP halaman tulis:");
-  L.push("  1) TEKS CERITA — maks " + kataMax + " kata, kalimat pendek, bahasa lisan yang enak dibacakan");
-  L.push("  2) DESKRIPSI ILUSTRASI — 1 kalimat bahasa Inggris: apa yang terlihat di halaman itu (tokoh, aksi, latar)");
+  L.push("Untuk TIAP halaman tulis HANYA dua baris ini:");
+  L.push("  HALAMAN n — [subjudul 2–4 kata]");
+  L.push("  TEKS: [maks " + kataMax + " kata, kalimat pendek, bahasa lisan yang enak dibacakan]");
+  L.push("PENTING: keluarkan HANYA teks bernomor di atas — JANGAN membuat/menampilkan gambar dan JANGAN menulis deskripsi ilustrasi. Ilustrasi dibuat terpisah.");
   L.push("");
   L.push("─── C. ATURAN ───");
   L.push("1. Tokoh konsisten: nama, sifat, dan penampilan sama di semua halaman.");
@@ -371,15 +372,24 @@ function buildCerita(d){
   L.push("1. Dilarang menceramahi ('anak-anak harus...') di tengah cerita.");
   L.push("2. Dilarang kata sulit tanpa konteks yang menjelaskan.");
   L.push("3. Dilarang mengubah nama/sifat tokoh di tengah jalan.");
+  L.push("4. Dilarang menampilkan gambar dalam bentuk apa pun — keluaran ini MURNI TEKS.");
   return L.join("\n");
 }
 function buildImg(d){
   const chars = d.karakter.length
     ? "Characters (keep identical on every page): " + d.karakter.map(k=>k.nama+" — "+k.deskripsi).join("; ") + ". "
     : "";
-  return GAYA_IMG[d.gaya] + ", " + chars +
-    "storybook illustration for page of a children's book about: " + d.pesan +
-    ", " + d.suasana.toLowerCase() + " mood, no text, no letters, no words, no watermark.";
+  const L = [];
+  L.push("TEMPLATE PROMPT ILUSTRASI — pakai ulang untuk tiap halaman:");
+  L.push("");
+  L.push(GAYA_IMG[d.gaya] + ", " + chars + "children's book illustration, " + d.suasana.toLowerCase() + " mood, no text, no letters, no words, no watermark.");
+  L.push("");
+  L.push("CARA PAKAI:");
+  L.push("1. Tempel template di atas + TEKS CERITA satu halaman ke AI gambar.");
+  L.push("2. Kerjakan dalam SATU sesi chat yang sama, halaman 1 sampai " + d.hal + " berurutan.");
+  L.push('3. Mulai halaman 2, tambahkan kalimat: "same characters and art style as the previous image".');
+  L.push("4. Untuk konsistensi maksimal, gunakan tool berfitur character reference (Midjourney --cref, Leonardo, dsb).");
+  return L.join("\n");
 }
 
 /* ============ GENERATE & OUTPUT ============ */
