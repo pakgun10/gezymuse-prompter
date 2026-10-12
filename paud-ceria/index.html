@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAUD Ceria Prompter — Generator Prompt Paket Aktivitas PAUD</title>
+<style>
+  :root{
+    --navy:#0f172a; --navy2:#1e293b; --navy3:#273549;
+    --gold:#f59e0b; --gold2:#fbbf24;
+    --bg:#0b1220; --card:#1e293b; --line:#334155;
+    --ink:#f1f5f9; --muted:#94a3b8; --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.6; min-height:100vh;
+    display:flex; flex-direction:column;}
+  .home-btn{position:fixed; top:14px; left:14px; z-index:50;
+    background:var(--navy2); border:1px solid var(--gold); color:var(--gold);
+    padding:9px 16px; border-radius:10px; font-weight:700; font-size:.88rem;
+    text-decoration:none; transition:.15s;}
+  .home-btn:hover{background:var(--gold); color:var(--navy);}
+  header{background:var(--navy); border-bottom:3px solid var(--gold);
+    padding:44px 20px 30px; text-align:center;}
+  header h1{font-size:clamp(1.5rem,4.6vw,2.3rem); letter-spacing:.5px;}
+  header h1 .gold{color:var(--gold);}
+  header p{color:var(--muted); margin-top:8px; font-size:clamp(.85rem,2.6vw,1rem);
+    max-width:620px; margin-left:auto; margin-right:auto;}
+  main{max-width:860px; margin:0 auto; padding:28px 16px 60px; flex:1; width:100%;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px 20px; margin-bottom:20px;}
+  .card h2{font-size:1.05rem; margin-bottom:4px; display:flex; align-items:center; gap:8px;}
+  .card h2 .num{background:var(--gold); color:var(--navy); width:26px; height:26px;
+    border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    font-size:.85rem; font-weight:800; flex:none;}
+  .card .desc{color:var(--muted); font-size:.85rem; margin-bottom:14px;}
+  .optgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px;}
+  .opt{cursor:pointer;}
+  .opt input{position:absolute; opacity:0; pointer-events:none;}
+  .opt .box{display:block; background:var(--navy3); border:2px solid var(--line);
+    border-radius:12px; padding:14px 10px; text-align:center; transition:.15s; height:100%;}
+  .opt .box .t{font-size:1.7rem; display:block; margin-bottom:4px;}
+  .opt .box .l{font-weight:700; font-size:.9rem; display:block;}
+  .opt .box .d{font-size:.76rem; color:var(--muted); display:block; margin-top:2px;}
+  .opt .box .v{font-weight:700; font-size:.95rem; display:block;}
+  .opt input:checked + .box{border-color:var(--gold); background:#3a2f14;
+    box-shadow:0 0 0 1px var(--gold);}
+  .opt input:focus-visible + .box{outline:2px solid var(--gold2); outline-offset:2px;}
+  .field{margin-bottom:14px;}
+  .field:last-child{margin-bottom:0;}
+  label.f{display:block; font-weight:700; font-size:.88rem; margin-bottom:6px;}
+  label.f .req{color:var(--gold);}
+  input[type=text], input[type=number], textarea, select{
+    width:100%; background:var(--navy3); border:1px solid var(--line); color:var(--ink);
+    border-radius:10px; padding:11px 13px; font-family:inherit; font-size:.92rem;}
+  input:focus, textarea:focus, select:focus{outline:none; border-color:var(--gold);}
+  textarea{min-height:84px; resize:vertical;}
+  input:disabled{background:#141d31; color:var(--muted);}
+  input.invalid, textarea.invalid{border-color:#ef4444;}
+  .lock{font-size:.78rem; color:var(--gold2); margin-top:5px; font-weight:600;}
+  .sub{display:none; background:var(--navy); border:1px dashed var(--line);
+    border-radius:10px; padding:14px; margin-top:12px;}
+  .sub.show{display:block;}
+  .sub h3{font-size:.9rem; margin-bottom:10px; color:var(--gold2);}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media(max-width:560px){.row2{grid-template-columns:1fr;}}
+  .center{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:6px 0 18px;}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; border:none; cursor:pointer;
+    font-family:inherit; font-weight:700; border-radius:12px; padding:13px 24px; font-size:.95rem;
+    text-decoration:none; transition:.15s;}
+  .btn-primary{background:var(--gold); color:var(--navy); box-shadow:0 4px 14px rgba(245,158,11,.35);}
+  .btn-primary:hover{background:var(--gold2);}
+  .btn-navy{background:var(--navy3); color:var(--ink); border:1px solid var(--line);}
+  .btn-navy:hover{border-color:var(--gold); color:var(--gold2);}
+  .btn-sm{padding:9px 16px; font-size:.85rem;}
+  #outputCard{display:none;}
+  #outputCard.show{display:block;}
+  pre#promptOut{background:#0f1b30; color:#dbe7ff; border-radius:12px; padding:18px;
+    font-size:.82rem; line-height:1.55; white-space:pre-wrap; word-wrap:break-word;
+    max-height:520px; overflow-y:auto; border:1px solid var(--line); margin:12px 0;}
+  .ai-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:8px; margin-top:10px;}
+  .ai-grid button{background:var(--navy3); border:1px solid var(--line); color:var(--ink);
+    border-radius:10px; padding:10px 6px; font-family:inherit; font-weight:700; font-size:.8rem;
+    cursor:pointer; transition:.15s;}
+  .ai-grid button:hover{border-color:var(--gold); color:var(--gold2);}
+  .block-label{font-size:.82rem; font-weight:700; color:var(--gold2); margin:14px 0 4px;}
+  .lib-item{background:var(--navy3); border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; margin-bottom:8px; display:flex; align-items:center; gap:10px;}
+  .lib-item .info{flex:1; min-width:0;}
+  .lib-item .t{font-weight:700; font-size:.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .lib-item .js{font-size:.75rem; color:var(--muted);}
+  .lib-item button{background:var(--navy); border:1px solid var(--line); color:var(--ink);
+    border-radius:8px; padding:6px 10px; font-size:.78rem; cursor:pointer; font-family:inherit;}
+  .lib-item button:hover{border-color:var(--gold); color:var(--gold2);}
+  .empty{color:var(--muted); font-size:.85rem; text-align:center; padding:12px;}
+  #toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--gold); color:var(--navy); font-weight:700; padding:12px 22px;
+    border-radius:12px; opacity:0; pointer-events:none; transition:.25s; z-index:99;
+    max-width:90vw; text-align:center; font-size:.9rem;}
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  footer{background:var(--navy); border-top:1px solid var(--line); color:var(--muted);
+    text-align:center; padding:20px 16px; font-size:.85rem;}
+  footer .gold{color:var(--gold); font-weight:700;}
+</style>
+</head>
+<body>
+
+<a class="home-btn" href="../">← 🏠 Beranda</a>
+
+<header>
+  <h1>🌈 PAUD Ceria <span class="gold">Prompter</span></h1>
+  <p>Generator prompt <b>satu paket aktivitas PAUD bertema</b> — sekali generate, dapat cerita bergambar, kartu kosakata, lagu, lembar aktivitas, dan RPPH singkat sekaligus.</p>
+</header>
+
+<main>
+
+  <!-- SECTION 1 -->
+  <section class="card">
+    <h2><span class="num">1</span> Tema &amp; Usia</h2>
+    <p class="desc">Tentang apa paket aktivitas ini, dan untuk anak usia berapa.</p>
+    <div class="field">
+      <label class="f" for="fTema">Tema paket <span class="req">*</span></label>
+      <input type="text" id="fTema" placeholder="cth: Binatang di Sekitarku">
+    </div>
+    <label class="f">Kelompok usia</label>
+    <div class="optgrid">
+      <label class="opt"><input type="radio" name="usia" value="4–5"><span class="box"><span class="v">4–5 tahun</span><span class="d">Kelompok A</span></span></label>
+      <label class="opt"><input type="radio" name="usia" value="5–6" checked><span class="box"><span class="v">5–6 tahun</span><span class="d">Kelompok B</span></span></label>
+    </div>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section class="card">
+    <h2><span class="num">2</span> Jangkar</h2>
+    <p class="desc">Guru menetapkan dulu — AI dilarang mengubah makna bagian ini.</p>
+    <div class="field">
+      <label class="f" for="fTP">TP / Tujuan Pembelajaran <span class="req">*</span></label>
+      <textarea id="fTP" placeholder="cth: Anak mengenal 5 binatang dan makanannya"></textarea>
+      <div class="lock">🔒 TERKUNCI — AI dilarang mengubah makna TP ini.</div>
+    </div>
+    <label class="f">Aspek perkembangan <span style="color:var(--muted);font-weight:400">(boleh pilih banyak)</span></label>
+    <div class="optgrid" id="aspekGrid">
+      <label class="opt"><input type="checkbox" name="aspek" value="Nilai agama & moral"><span class="box"><span class="t">🕌</span><span class="l">Nilai agama &amp; moral</span></span></label>
+      <label class="opt"><input type="checkbox" name="aspek" value="Fisik-motorik"><span class="box"><span class="t">🤸</span><span class="l">Fisik-motorik</span></span></label>
+      <label class="opt"><input type="checkbox" name="aspek" value="Kognitif" checked><span class="box"><span class="t">🧠</span><span class="l">Kognitif</span></span></label>
+      <label class="opt"><input type="checkbox" name="aspek" value="Bahasa" checked><span class="box"><span class="t">💬</span><span class="l">Bahasa</span></span></label>
+      <label class="opt"><input type="checkbox" name="aspek" value="Sosial-emosional"><span class="box"><span class="t">😊</span><span class="l">Sosial-emosional</span></span></label>
+      <label class="opt"><input type="checkbox" name="aspek" value="Seni"><span class="box"><span class="t">🎨</span><span class="l">Seni</span></span></label>
+    </div>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section class="card">
+    <h2><span class="num">3</span> Komponen Paket</h2>
+    <p class="desc">Pilih komponen yang ingin dibuatkan — boleh pilih banyak. Opsi tiap komponen muncul di bawah.</p>
+    <div class="optgrid">
+      <label class="opt"><input type="checkbox" name="komp" value="cerita" checked><span class="box"><span class="t">📖</span><span class="l">Cerita bergambar</span></span></label>
+      <label class="opt"><input type="checkbox" name="komp" value="kartu" checked><span class="box"><span class="t">🃏</span><span class="l">Kartu kosakata</span></span></label>
+      <label class="opt"><input type="checkbox" name="komp" value="lagu" checked><span class="box"><span class="t">🎵</span><span class="l">Lagu anak</span></span></label>
+      <label class="opt"><input type="checkbox" name="komp" value="lembar" checked><span class="box"><span class="t">🎨</span><span class="l">Lembar aktivitas</span></span></label>
+      <label class="opt"><input type="checkbox" name="komp" value="rpph" checked><span class="box"><span class="t">📋</span><span class="l">RPPH singkat</span></span></label>
+    </div>
+
+    <div class="sub" id="subCerita">
+      <h3>📖 Opsi cerita bergambar</h3>
+      <div style="max-width:220px">
+        <label class="f" for="fHal">Jumlah halaman (4–8)</label>
+        <input type="number" id="fHal" min="4" max="8" value="6">
+      </div>
+    </div>
+    <div class="sub" id="subKartu">
+      <h3>🃏 Opsi kartu kosakata</h3>
+      <div class="row2">
+        <div>
+          <label class="f" for="fKartu">Jumlah kartu (4–10)</label>
+          <input type="number" id="fKartu" min="4" max="10" value="8">
+        </div>
+      </div>
+      <p style="font-size:.8rem;color:var(--muted);margin-top:8px">Tiap kartu = 1 kata + deskripsi gambar 1 kalimat bahasa Inggris (objek tunggal, latar polos).</p>
+    </div>
+    <div class="sub" id="subLagu">
+      <h3>🎵 Opsi lagu anak</h3>
+      <label class="f">Nada lagu populer</label>
+      <div class="optgrid">
+        <label class="opt"><input type="radio" name="nada" value="Balonku" checked><span class="box"><span class="v">🎈 Balonku</span></span></label>
+        <label class="opt"><input type="radio" name="nada" value="Cicak di Dinding"><span class="box"><span class="v">🦎 Cicak di Dinding</span></span></label>
+        <label class="opt"><input type="radio" name="nada" value="Topi Saya Bundar"><span class="box"><span class="v">🎩 Topi Saya Bundar</span></span></label>
+      </div>
+      <p style="font-size:.8rem;color:var(--muted);margin-top:8px">Lirik 2 bait + gerakan tangan sederhana per baris.</p>
+    </div>
+    <div class="sub" id="subLembar">
+      <h3>🎨 Lembar aktivitas</h3>
+      <p style="font-size:.88rem">Selalu 2 lembar: <b>Lembar 1 MEWARNAI</b> (gambar garis tebal sesuai tema) dan <b>Lembar 2 MENCOCOKKAN</b> (5 pasangan kata–gambar, acak).</p>
+    </div>
+    <div class="sub" id="subRpph">
+      <h3>📋 RPPH singkat</h3>
+      <p style="font-size:.88rem">Selalu mencakup: tujuan, alat &amp; bahan (barang sehari-hari), langkah pembuka 10′ – inti 40′ – penutup 10′, dan penilaian checklist observasi 3 indikator.</p>
+    </div>
+  </section>
+
+  <!-- SECTION 4 : AKSI -->
+  <section class="card">
+    <h2><span class="num">4</span> Aksi</h2>
+    <p class="desc">Generate prompt paket, lalu kirim ke AI favoritmu.</p>
+    <div class="center">
+      <button class="btn btn-primary" id="btnGenerate" type="button">🪄 Generate Prompt</button>
+      <button class="btn btn-navy" id="btnSample" type="button">✨ Contoh Cepat</button>
+      <button class="btn btn-navy" id="btnCopy" type="button">📋 Salin</button>
+      <button class="btn btn-navy" id="btnDownload" type="button">⬇️ Unduh .md</button>
+    </div>
+    <div class="block-label">🚀 Kirim ke AI — prompt otomatis tersalin, lalu situs AI terbuka di tab baru</div>
+    <div class="ai-grid" id="aiRow"></div>
+  </section>
+
+  <!-- OUTPUT -->
+  <section class="card" id="outputCard">
+    <h2><span class="num">✓</span> Prompt Siap Pakai</h2>
+    <p class="desc">Satu prompt = satu paket tema lengkap. Salin lalu tempel ke AI favorit Bapak/Ibu.</p>
+    <div class="block-label">📝 Prompt paket aktivitas PAUD</div>
+    <pre id="promptOut"></pre>
+    <div class="center" style="margin-top:14px">
+      <button class="btn btn-navy btn-sm" id="btnCopy2" type="button">📋 Salin Lagi</button>
+      <button class="btn btn-navy btn-sm" id="btnSave" type="button">💾 Simpan ke Pustaka</button>
+    </div>
+  </section>
+
+  <!-- PUSTAKA -->
+  <section class="card">
+    <h2><span class="num">📚</span> Pustaka Saya</h2>
+    <p class="desc">Semua prompt tersimpan otomatis di perangkat ini.</p>
+    <div id="libList"></div>
+    <div class="center" style="margin-top:12px">
+      <button class="btn btn-navy btn-sm" id="btnExport" type="button">⬆️ Ekspor JSON</button>
+      <button class="btn btn-navy btn-sm" id="btnImport" type="button">⬇️ Impor JSON</button>
+      <input type="file" id="fileImport" accept="application/json" style="display:none">
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="gold">🌈 PAUD Ceria Prompter</div>
+  <div style="margin-top:6px">@2026 GezyTech Prompter. Dikembangkan oleh PakGun</div>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ============ HELPERS ============ */
+const $ = id => document.getElementById(id);
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+function radioVal(name){
+  const r = document.querySelector('input[name="'+name+'"]:checked');
+  return r ? r.value : "";
+}
+function checkVals(name){
+  return Array.from(document.querySelectorAll('input[name="'+name+'"]:checked')).map(r=>r.value);
+}
+function copyText(txt){
+  if(!txt){ toast("Generate dulu ya 🙂"); return; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>toast("Prompt tersalin ✅"), ()=>fallbackCopy(txt));
+  } else fallbackCopy(txt);
+}
+function fallbackCopy(txt){
+  const ta = document.createElement("textarea");
+  ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toast("Prompt tersalin ✅"); }
+  catch(e){ toast("Gagal menyalin 😢"); }
+  document.body.removeChild(ta);
+}
+const AI_SITES = [
+  ["Muse","https://muse.ai"], ["ChatGPT","https://chat.openai.com"],
+  ["Claude","https://claude.ai"], ["Gemini","https://gemini.google.com"],
+  ["DeepSeek","https://chat.deepseek.com"], ["Grok","https://grok.com"],
+  ["Copilot","https://copilot.microsoft.com"], ["Qwen","https://chat.qwen.ai"],
+  ["Le Chat","https://chat.mistral.ai"], ["Perplexity","https://www.perplexity.ai"]
+];
+function renderAIRows(){
+  $("aiRow").innerHTML = AI_SITES.map(([n,u])=>
+    '<button type="button" data-ai="'+n+'|'+u+'">🚀 '+n+'</button>').join("");
+  $("aiRow").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    const [n,u] = b.getAttribute("data-ai").split("|");
+    if(!lastPrompt){ toast("Generate dulu ya 🙂"); return; }
+    copyText(lastPrompt);
+    window.open(u, "_blank", "noopener");
+  }));
+}
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* ============ CONTOH CEPAT ============ */
+function isiContoh(){
+  $("fTema").value = "Binatang di Sekitarku";
+  document.querySelector('input[name="usia"][value="5–6"]').checked = true;
+  $("fTP").value = "Anak mengenal 5 binatang dan makanannya";
+  document.querySelectorAll('input[name="aspek"]').forEach(c=>{
+    c.checked = (c.value === "Kognitif" || c.value === "Bahasa");
+  });
+  document.querySelectorAll('input[name="komp"]').forEach(c=>{ c.checked = true; });
+  $("fHal").value = 6; $("fKartu").value = 8;
+  document.querySelector('input[name="nada"][value="Balonku"]').checked = true;
+  syncKomp();
+  toast("Contoh cepat terisi — silakan ubah lalu Generate");
+}
+
+/* ============ FORM ============ */
+function getForm(){
+  const val = id => $(id).value.trim();
+  const hal = Math.max(4, Math.min(8, +val("fHal") || 6));
+  const kar = Math.max(4, Math.min(10, +val("fKartu") || 8));
+  $("fHal").value = hal; $("fKartu").value = kar;
+  return {
+    tema: val("fTema"), usia: radioVal("usia") || "5–6",
+    tp: val("fTP"), aspek: checkVals("aspek"),
+    komp: checkVals("komp"),
+    hal: hal, kartu: kar, nada: radioVal("nada") || "Balonku"
+  };
+}
+function validate(d){
+  let ok = true;
+  [["fTema", d.tema], ["fTP", d.tp]].forEach(([id, v])=>{
+    $(id).classList.toggle("invalid", !v); if(!v) ok = false;
+  });
+  if(d.komp.length === 0){ ok = false; toast("Pilih minimal 1 komponen paket"); }
+  else if(!ok){ toast("Lengkapi: tema dan TP"); }
+  return ok;
+}
+
+/* ============ BANGUN PROMPT ============ */
+const KOMP_LABEL = {cerita:"Cerita bergambar", kartu:"Kartu kosakata", lagu:"Lagu anak", lembar:"Lembar aktivitas", rpph:"RPPH singkat"};
+function buildPrompt(d){
+  const L = [];
+  L.push("🎯 BUAT PAKET AKTIVITAS PAUD");
+  L.push("");
+  L.push('"' + d.tema + '"');
+  L.push("Kelompok " + d.usia + " tahun");
+  L.push("");
+  L.push("Buatkan SATU PAKET aktivitas pembelajaran PAUD bertema di atas sesuai konfigurasi berikut.");
+  L.push("");
+  L.push("─── A. KONFIGURASI ───");
+  L.push("Tema            : " + d.tema);
+  L.push("Kelompok usia   : " + d.usia + " tahun");
+  L.push("TP [TERKUNCI]   : " + d.tp + " — JANGAN diubah maknanya; semua komponen harus setia pada TP ini.");
+  L.push("Aspek           : " + (d.aspek.length ? d.aspek.join(", ") : "—"));
+  L.push("Komponen paket  : " + d.komp.map(k=>KOMP_LABEL[k]).join(", "));
+  L.push("");
+  L.push("─── B. ISI PAKET ───");
+  L.push("Buatkan HANYA komponen berikut, sesuai urutan:");
+  L.push("");
+  d.komp.forEach(k=>{
+    if(k === "cerita"){
+      L.push("📖 CERITA BERGAMBAR (" + d.hal + " halaman)");
+      L.push("Untuk TIAP halaman tulis HANYA dua baris ini:");
+      L.push("  HALAMAN n");
+      L.push("  TEKS: [maks 3 kalimat super pendek tentang tema]");
+      L.push("  DESKRIPSI ILUSTRASI: [1 kalimat bahasa Inggris: apa yang terlihat — tokoh, aksi, latar]");
+      L.push("Alur: perkenalan tokoh & dunia → bertemu binatang/benda tema → bermain/belajar bersama → penutup hangat.");
+      L.push("");
+    } else if(k === "kartu"){
+      L.push("🃏 KARTU KOSAKATA (" + d.kartu + " kartu)");
+      L.push("Untuk TIAP kartu tulis:");
+      L.push("  KARTU n");
+      L.push("  KATA: [1 kata benda sesuai tema, huruf kapital]");
+      L.push("  DESKRIPSI GAMBAR: [1 kalimat bahasa Inggris — objek tunggal, latar polos, gaya flat ramah anak]");
+      L.push("Pilih kata yang paling dekat dengan kehidupan anak sehari-hari.");
+      L.push("");
+    } else if(k === "lagu"){
+      L.push("🎵 LAGU ANAK (nada: " + d.nada + ")");
+      L.push("Tulis lirik 2 bait mengikuti pola suku kata & ketukan nada \"" + d.nada + "\".");
+      L.push("Tiap baris lirik diikuti gerakan tangan sederhana dalam kurung, contoh: (tepuk tangan 2x).");
+      L.push("Tema lirik: " + d.tema + " — ceria, mudah dihafal, tanpa kata sulit.");
+      L.push("");
+    } else if(k === "lembar"){
+      L.push("🎨 LEMBAR AKTIVITAS (2 lembar)");
+      L.push("LEMBAR 1 — MEWARNAI: deskripsikan 1 gambar garis tebal (bold outline) sesuai tema yang siap diwarnai anak, sebutkan bagian-bagiannya.");
+      L.push("LEMBAR 2 — MENCOCOKKAN: 5 pasangan kata–gambar sesuai tema, tampilkan dalam urutan ACAK (kolom kiri kata, kolom kanan gambar dideskripsikan).");
+      L.push("");
+    } else if(k === "rpph"){
+      L.push("📋 RPPH SINGKAT");
+      L.push("Tulis RPPH 1 hari dengan format:");
+      L.push("  1) Tujuan: [turunan TP untuk hari ini]");
+      L.push("  2) Alat & bahan: [barang sehari-hari yang mudah didapat]");
+      L.push("  3) Langkah kegiatan:");
+      L.push("     - Pembuka (10'): salam, doa, apersepsi dengan lagu dari paket ini");
+      L.push("     - Inti (40'): bermain memakai komponen paket di atas (sebutkan caranya)");
+      L.push("     - Penutup (10'): refleksi dengan 2 pertanyaan mudah, doa penutup");
+      L.push("  4) Penilaian: checklist observasi 3 indikator sesuai TP & aspek perkembangan.");
+      L.push("");
+    }
+  });
+  L.push("─── C. ATURAN BAHASA & KEAMANAN ───");
+  L.push("1. Kalimat maks 8 kata; kata konkret dari kehidupan sehari-hari.");
+  L.push("2. Tanpa istilah abstrak; tanpa unsur menakutkan/kekerasan.");
+  L.push("3. Semua aktivitas aman dilakukan di dalam kelas.");
+  L.push("");
+  L.push("─── LARANGAN ───");
+  L.push("1. Dilarang menceramahi di tengah aktivitas.");
+  L.push("2. Dilarang materi di luar TP yang ditetapkan.");
+  L.push("3. Dilarang aktivitas berbahaya atau berlarian tanpa pengawasan.");
+  L.push("4. Dilarang teks/huruf di dalam deskripsi ilustrasi (no text).");
+  return L.join("\n");
+}
+
+/* ============ GENERATE & OUTPUT ============ */
+let lastPrompt = "", lastData = null;
+function doGenerate(){
+  const d = getForm();
+  if(!validate(d)) return;
+  lastData = d;
+  lastPrompt = buildPrompt(d);
+  $("promptOut").textContent = lastPrompt;
+  $("outputCard").classList.add("show");
+  const oc = $("outputCard");
+  if(oc.scrollIntoView) oc.scrollIntoView({behavior:"smooth", block:"start"});
+  toast("Prompt paket berhasil dibuat 🪄");
+}
+function doDownload(){
+  if(!lastPrompt){ toast("Generate dulu ya 🙂"); return; }
+  const md = "# " + lastData.tema + "\n\n```\n" + lastPrompt + "\n```\n";
+  const blob = new Blob([md], {type:"text/markdown"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "paket-paud-" + lastData.tema.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") + ".md";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+/* ============ PUSTAKA ============ */
+const LIB_KEY = "paud_ceria_lib";
+function getLib(){
+  try{ return JSON.parse(localStorage.getItem(LIB_KEY) || "[]"); }
+  catch(e){ return []; }
+}
+function setLib(arr){ localStorage.setItem(LIB_KEY, JSON.stringify(arr)); }
+function doSave(){
+  if(!lastPrompt){ toast("Generate dulu ya 🙂"); return; }
+  const lib = getLib();
+  const d = lastData;
+  lib.unshift({tema:d.tema, usia:d.usia, komp:d.komp.map(k=>KOMP_LABEL[k]).join(", "),
+    ts:Date.now(), prompt:lastPrompt});
+  setLib(lib); renderLib();
+  toast("Tersimpan di pustaka 💾");
+}
+function renderLib(){
+  const lib = getLib();
+  const wrap = $("libList");
+  if(!lib.length){ wrap.innerHTML = '<div class="empty">Belum ada prompt tersimpan.</div>'; return; }
+  wrap.innerHTML = lib.map((it,i)=>{
+    const tgl = new Date(it.ts).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"});
+    return '<div class="lib-item"><div class="info">'+
+      '<div class="t">'+esc(it.tema||"Tanpa tema")+'</div>'+
+      '<div class="js">'+esc(it.usia||"")+' tahun • '+esc(it.komp||"")+' • '+tgl+'</div></div>'+
+      '<button type="button" data-act="load" data-i="'+i+'">📥 Muat</button>'+
+      '<button type="button" data-act="dl" data-i="'+i+'">⬇️</button>'+
+      '<button type="button" data-act="del" data-i="'+i+'">🗑️</button></div>';
+  }).join("");
+  wrap.querySelectorAll("button[data-act]").forEach(b=>b.addEventListener("click",()=>{
+    const i = +b.getAttribute("data-i"), lib2 = getLib(), it = lib2[i];
+    if(!it) return;
+    const act = b.getAttribute("data-act");
+    if(act === "load"){ lastPrompt = it.prompt; lastData = {tema:it.tema}; $("promptOut").textContent = it.prompt; $("outputCard").classList.add("show"); toast("Prompt dimuat ✅"); }
+    else if(act === "del"){ lib2.splice(i,1); setLib(lib2); renderLib(); toast("Dihapus 🗑️"); }
+    else if(act === "dl"){
+      const blob = new Blob(["# "+it.tema+"\n\n```\n"+it.prompt+"\n```\n"], {type:"text/markdown"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "paket-paud.md";
+      document.body.appendChild(a); a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+  }));
+}
+function doExport(){
+  const lib = getLib();
+  if(!lib.length){ toast("Pustaka kosong 🙂"); return; }
+  const blob = new Blob([JSON.stringify(lib,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "pustaka-paud-ceria.json";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function doImport(file){
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const arr = JSON.parse(r.result);
+      if(!Array.isArray(arr)) throw new Error("bukan array");
+      setLib(arr.concat(getLib())); renderLib();
+      toast("Impor berhasil ✅ ("+arr.length+" prompt)");
+    }catch(e){ toast("File tidak valid 😢"); }
+  };
+  r.readAsText(file);
+}
+
+/* ============ SYNC KOMPONEN ============ */
+function syncKomp(){
+  const on = checkVals("komp");
+  $("subCerita").classList.toggle("show", on.includes("cerita"));
+  $("subKartu").classList.toggle("show", on.includes("kartu"));
+  $("subLagu").classList.toggle("show", on.includes("lagu"));
+  $("subLembar").classList.toggle("show", on.includes("lembar"));
+  $("subRpph").classList.toggle("show", on.includes("rpph"));
+}
+
+/* ============ INIT ============ */
+document.addEventListener("DOMContentLoaded", ()=>{
+  renderAIRows(); renderLib(); syncKomp();
+  document.querySelectorAll('input[name="komp"]').forEach(c=>
+    c.addEventListener("change", syncKomp));
+  $("btnSample").addEventListener("click", isiContoh);
+  $("btnGenerate").addEventListener("click", doGenerate);
+  $("btnCopy").addEventListener("click", ()=>copyText(lastPrompt));
+  $("btnCopy2").addEventListener("click", ()=>copyText(lastPrompt));
+  $("btnDownload").addEventListener("click", doDownload);
+  $("btnSave").addEventListener("click", doSave);
+  $("btnExport").addEventListener("click", doExport);
+  $("btnImport").addEventListener("click", ()=>$("fileImport").click());
+  $("fileImport").addEventListener("change", e=>{ if(e.target.files[0]) doImport(e.target.files[0]); e.target.value=""; });
+});
+</script>
+</body>
+</html>

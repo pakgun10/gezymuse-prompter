@@ -215,6 +215,8 @@
         <span><b>Pedoman penskoran</b><small>Skor tiap soal + rumus nilai akhir 0–100</small></span></label>
       <label class="chk"><input type="checkbox" id="oRubrik" checked>
         <span><b>Rubrik uraian</b><small>Kriteria skor bertingkat untuk soal uraian</small></span></label>
+      <label class="chk"><input type="checkbox" id="oRemedial" checked>
+        <span><b>Remedial &amp; pengayaan</b><small>Soal remedial setara + tugas pengayaan HOTS</small></span></label>
     </div>
   </section>
 
@@ -347,7 +349,7 @@ function isiContoh(){
   $("fJumlah").value = 10; $("fLevel").value = "seimbang"; $("fKonteks").value = "kontekstual";
   $("tPG").value = 7; $("tIsian").value = 2; $("tJodoh").value = 0; $("tUraian").value = 1;
   $("fTP").value = "menentukan hasil operasi penjumlahan dan pengurangan bilangan bulat\nmemecahkan masalah sehari-hari yang melibatkan bilangan bulat";
-  ["oKisi","oNaskah","oKunci","oSkor","oRubrik"].forEach(id=>$(id).checked = true);
+  ["oKisi","oNaskah","oKunci","oSkor","oRubrik","oRemedial"].forEach(id=>$(id).checked = true);
   updateTotal();
   toast("Contoh terisi — silakan ubah lalu Generate");
 }
@@ -363,7 +365,7 @@ function getForm(){
     level: val("fLevel"), konteks: val("fKonteks"), kom: komposisi(),
     tp: val("fTP").split("\n").map(s=>s.trim()).filter(Boolean),
     oKisi: $("oKisi").checked, oNaskah: $("oNaskah").checked, oKunci: $("oKunci").checked,
-    oSkor: $("oSkor").checked, oRubrik: $("oRubrik").checked
+    oSkor: $("oSkor").checked, oRubrik: $("oRubrik").checked, oRemedial: $("oRemedial").checked
   };
 }
 function validate(d){
@@ -379,7 +381,7 @@ function validate(d){
     ["tPG","tIsian","tJodoh","tUraian"].forEach(id=>$(id).classList.add("invalid"));
     ok = false;
   } else ["tPG","tIsian","tJodoh","tUraian"].forEach(id=>$(id).classList.remove("invalid"));
-  if(!(d.oKisi||d.oNaskah||d.oKunci||d.oSkor||d.oRubrik)){ toast("Centang minimal 1 keluaran"); ok = false; }
+  if(!(d.oKisi||d.oNaskah||d.oKunci||d.oSkor||d.oRubrik||d.oRemedial)){ toast("Centang minimal 1 keluaran"); ok = false; }
   if(!ok && d.nama && d.mapel && d.materi && d.tp.length) toast("Periksa komposisi soal / keluaran");
   else if(!ok) toast("Lengkapi: nama, mapel, materi, dan TP");
   return ok;
@@ -446,6 +448,13 @@ function buildPrompt(d){
   if(d.oRubrik && d.kom.uraian){
     L.push("─── " + sec + ". RUBRIK SOAL URAIAN ───");
     L.push("Untuk tiap soal uraian buat tabel rubrik: Skor 4 = jawaban lengkap & tepat + alasan benar; 3 = tepat tapi alasan kurang; 2 = sebagian benar; 1 = ada upaya relevan; 0 = kosong/salah total.");
+    L.push("");
+    sec = String.fromCharCode(sec.charCodeAt(0)+1);
+  }
+  if(d.oRemedial){
+    L.push("─── " + sec + ". REMEDIAL & PENGAYAAN ───");
+    L.push("REMEDIAL (untuk peserta didik di bawah KKM): buat 5 soal SETARA — indikator sama dengan naskah utama, tetapi angka/konteks berbeda; sertakan kunci jawaban; tambah 1 paragraf saran pembelajaran ulang (bagian materi mana yang diulang dan dengan cara apa).");
+    L.push("PENGAYAAN (untuk peserta didik yang tuntas): buat 1 tugas eksplorasi HOTS yang MEMPERLUAS materi (bukan sekadar soal yang lebih sulit) + panduan penilaian singkat (apa yang dinilai).");
     L.push("");
     sec = String.fromCharCode(sec.charCodeAt(0)+1);
   }
