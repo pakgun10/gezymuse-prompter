@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBT Prompter — Generator Prompt Aplikasi Ujian Online</title>
+<style>
+  :root{
+    --navy:#1B2A4A; --navy2:#243b63; --gold:#F5B301; --gold2:#d99e00;
+    --bg:#F4F6FB; --card:#ffffff; --ink:#1e2a3a; --muted:#6b7a90;
+    --line:#e3e9f2; --green:#22c55e; --red:#ef4444; --radius:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.55;}
+  .back-home{position:fixed; top:14px; left:14px; z-index:100; display:inline-flex; align-items:center; gap:6px;
+    background:rgba(27,42,74,.94); color:#fff; text-decoration:none; font-size:.85rem; font-weight:700;
+    padding:9px 15px; border-radius:999px; border:1px solid rgba(245,179,1,.55); box-shadow:0 4px 14px rgba(0,0,0,.25); transition:.15s;}
+  .back-home:hover{background:var(--gold); color:var(--navy); border-color:var(--gold);}
+  header.top{background:var(--navy); color:#fff; padding:40px 20px 32px; text-align:center;}
+  header.top h1{font-size:clamp(1.6rem,4vw,2.4rem); letter-spacing:.5px;}
+  header.top h1 .gold{color:var(--gold);}
+  header.top p{opacity:.88; margin-top:6px; font-size:clamp(.85rem,2.4vw,1rem); max-width:640px; margin-left:auto; margin-right:auto;}
+  .badge{display:inline-block; background:rgba(245,179,1,.16); border:1px solid var(--gold);
+    color:var(--gold); font-size:.75rem; padding:3px 12px; border-radius:999px; margin-top:10px;}
+  main{max-width:980px; margin:0 auto; padding:24px 16px 90px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px; margin-bottom:20px; box-shadow:0 2px 10px rgba(27,42,74,.06);}
+  .card h2{font-size:1.15rem; color:var(--navy); margin-bottom:4px; display:flex; align-items:center; gap:8px;}
+  .card h2 .num{background:var(--navy); color:#fff; width:28px; height:28px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; flex:none;}
+  .card .desc{color:var(--muted); font-size:.88rem; margin-bottom:16px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+  @media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr 1fr;}}
+  @media(max-width:420px){.grid2,.grid3{grid-template-columns:1fr;}}
+  label.f{display:block; font-weight:600; font-size:.88rem; margin-bottom:6px; color:var(--navy);}
+  label.f .req{color:var(--red);}
+  .hint{font-size:.78rem; color:var(--muted); margin-top:4px;}
+  .lock-note{font-size:.8rem; color:var(--navy); background:#fdf6e3; border:1px dashed var(--gold2);
+    border-radius:8px; padding:8px 12px; margin-top:8px;}
+  input[type=text],input[type=number],select,textarea{
+    width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:.95rem; font-family:inherit; background:#fff; color:var(--ink);}
+  input:focus,select:focus,textarea:focus{outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(27,42,74,.12);}
+  textarea{min-height:76px; resize:vertical;}
+  input.invalid,select.invalid,textarea.invalid{border-color:var(--red); box-shadow:0 0 0 3px rgba(239,68,68,.12);}
+  .opt-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px;}
+  .opt{position:relative;}
+  .opt input{position:absolute; opacity:0; pointer-events:none;}
+  .opt .box{display:block; border:2px solid var(--line); border-radius:12px; padding:13px 12px; cursor:pointer;
+    transition:.15s; background:#fff; height:100%; min-width:0; overflow-wrap:break-word;}
+  .opt .box:hover{border-color:#b9c6da;}
+  .opt input:checked + .box{border-color:var(--gold2); background:#fff8e6; box-shadow:0 0 0 3px rgba(245,179,1,.25);}
+  .opt .box .t{font-weight:700; font-size:.92rem; color:var(--navy); display:block;}
+  .opt .box .d{font-size:.8rem; color:var(--muted); margin-top:3px; display:block;}
+  .opt.disabled .box{opacity:.45; cursor:not-allowed;}
+  .checks{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  @media(max-width:560px){.checks{grid-template-columns:1fr;}}
+  .chk{display:flex; gap:10px; align-items:flex-start; background:#f8fafd; border:1px solid var(--line);
+    border-radius:10px; padding:10px 12px; cursor:pointer; font-size:.88rem;}
+  .chk input{margin-top:3px; width:16px; height:16px; accent-color:var(--navy); flex:none;}
+  .chk b{color:var(--navy); display:block; font-size:.9rem;}
+  .chk small{color:var(--muted); font-size:.78rem; display:block;}
+  .chk.disabled{opacity:.45; cursor:not-allowed;}
+  .center{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:6px 0 20px;}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; border:none; cursor:pointer;
+    font-family:inherit; font-weight:700; border-radius:12px; padding:13px 24px; font-size:.95rem; transition:.15s; text-decoration:none;}
+  .btn-primary{background:var(--gold); color:var(--navy); box-shadow:0 4px 14px rgba(245,179,1,.4);}
+  .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(245,179,1,.5);}
+  .btn-navy{background:var(--navy); color:#fff;}
+  .btn-navy:hover{background:var(--navy2);}
+  .btn-line{background:#fff; color:var(--navy); border:1.5px solid var(--line);}
+  .btn-line:hover{border-color:var(--navy);}
+  .btn-sm{padding:8px 14px; font-size:.82rem; border-radius:9px;}
+  #outputCard{display:none;}
+  #outputCard.show{display:block;}
+  pre#promptOut{background:#0f1b30; color:#dbe7ff; border-radius:12px; padding:18px; font-size:.82rem;
+    line-height:1.6; white-space:pre-wrap; word-wrap:break-word; max-height:480px; overflow-y:auto; margin-bottom:14px;}
+  .out-actions{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;}
+  .ai-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px;}
+  .ai-btn{background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:10px 8px;
+    font-family:inherit; font-size:.85rem; font-weight:600; color:var(--navy); cursor:pointer; transition:.15s;}
+  .ai-btn:hover{border-color:var(--gold2); background:#fff8e6;}
+  .lib-item{border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:10px;
+    display:flex; justify-content:space-between; align-items:center; gap:10px; background:#f8fafd;}
+  .lib-item .meta .jt{font-weight:700; color:var(--navy); font-size:.92rem;}
+  .lib-item .meta .js{font-size:.78rem; color:var(--muted);}
+  .lib-item .acts{display:flex; gap:6px; flex:none;}
+  .empty-lib{text-align:center; color:var(--muted); font-size:.88rem; padding:18px;}
+  #toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--navy);
+    color:#fff; padding:12px 22px; border-radius:999px; font-size:.88rem; font-weight:600; opacity:0;
+    pointer-events:none; transition:.25s; z-index:200; max-width:90vw; text-align:center; border:1px solid var(--gold);}
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  footer{background:var(--navy); color:#cdd8ea; text-align:center; padding:22px 16px; font-size:.88rem;}
+  footer .gold{color:var(--gold); font-weight:700;}
+  .kom-total{font-size:.85rem; font-weight:700; color:var(--navy); margin-top:8px;}
+  .kom-total.ok{color:var(--green);}
+  .kom-total.bad{color:var(--red);}
+</style>
+</head>
+<body>
+<a class="back-home" href="../">← 🏠 Beranda</a>
+
+<header class="top">
+  <h1>💻 CBT <span class="gold">Prompter</span></h1>
+  <p>Generator prompt untuk menyuruh AI membangunkan aplikasi CBT (Computer Based Test) yang lengkap: frontend + backend + panduan deploy.</p>
+  <span class="badge">Arsitektur acuan: HTML statis + 2 pilihan backend (Google Sheets / Cloudflare D1)</span>
+</header>
+
+<main>
+  <section class="card">
+    <h2><span class="num">1</span> Jenis CBT</h2>
+    <p class="desc">Pilih satu jenis ujian yang ingin dibuatkan aplikasinya.</p>
+    <div class="opt-grid" id="jenisGrid"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">2</span> Konteks</h2>
+    <p class="desc">Identitas ujian ini.</p>
+    <div class="grid2">
+      <div>
+        <label class="f" for="fNama">Nama ujian <span class="req">*</span></label>
+        <input type="text" id="fNama" placeholder="cth: Ulangan Harian Bilangan Bulat">
+      </div>
+      <div>
+        <label class="f" for="fMapel">Mata pelajaran <span class="req">*</span></label>
+        <select id="fMapel">
+          <option value="">— pilih —</option>
+          <option>Bahasa Indonesia</option><option>Matematika</option><option>IPA</option>
+          <option>IPS</option><option>PPKn</option><option>Bahasa Inggris</option>
+          <option>Seni</option><option>PJOK</option><option>Informatika</option><option>Umum</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fJenjang">Jenjang</label>
+        <select id="fJenjang">
+          <option>SD</option><option selected>SMP</option><option>SMA</option><option>SMK</option>
+        </select>
+      </div>
+      <div>
+        <label class="f" for="fKelas">Kelas</label>
+        <input type="text" id="fKelas" placeholder="cth: 7 / 7C">
+      </div>
+    </div>
+    <div class="grid3" style="margin-top:14px">
+      <div>
+        <label class="f" for="fJumlah">Jumlah soal</label>
+        <input type="number" id="fJumlah" min="1" max="100" value="10">
+      </div>
+      <div>
+        <label class="f" for="fKkm">KKM</label>
+        <input type="number" id="fKkm" min="0" max="100" value="75">
+      </div>
+      <div>
+        <label class="f" for="fDurasi">Durasi (menit)</label>
+        <input type="number" id="fDurasi" min="5" max="300" value="60">
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">3</span> Jangkar</h2>
+    <p class="desc">Guru menetapkan dulu — AI dilarang mengubah makna bagian ini.</p>
+    <div>
+      <label class="f" for="fTP">Materi / TP yang diujikan <span class="req">*</span></label>
+      <textarea id="fTP" placeholder="cth: menentukan hasil operasi penjumlahan dan pengurangan bilangan bulat"></textarea>
+      <div class="lock-note">🔒 <b>TERKUNCI</b> — AI dilarang mengubah makna TP ini. Soal harus setia pada TP di atas.</div>
+    </div>
+    <div style="margin-top:16px">
+      <label class="f">Komposisi soal <span class="req">*</span></label>
+      <div class="grid3">
+        <div>
+          <label class="f" for="tPG" style="font-weight:500">Pilihan ganda</label>
+          <input type="number" id="tPG" min="0" max="100" value="7">
+        </div>
+        <div>
+          <label class="f" for="tIsian" style="font-weight:500">Isian singkat</label>
+          <input type="number" id="tIsian" min="0" max="100" value="2">
+        </div>
+        <div>
+          <label class="f" for="tUraian" style="font-weight:500">Uraian</label>
+          <input type="number" id="tUraian" min="0" max="100" value="1">
+        </div>
+      </div>
+      <div class="kom-total" id="komTotal"></div>
+      <div class="hint">Total komposisi HARUS sama dengan Jumlah soal di Section 2.</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">4</span> Backend &amp; Fitur</h2>
+    <p class="desc">Di mana data tersimpan dan fitur apa saja yang aktif.</p>
+    <div>
+      <label class="f">Backend — pilih salah satu paket</label>
+      <div class="opt-grid">
+        <label class="opt"><input type="radio" name="backend" value="github" checked>
+          <span class="box"><span class="t">📦 Paket GitHub</span>
+          <span class="d">GitHub Pages + Google Sheets + Apps Script. Pola terbukti, paling familiar</span></span></label>
+        <label class="opt"><input type="radio" name="backend" value="cloudflare">
+          <span class="box"><span class="t">📦 Paket Cloudflare</span>
+          <span class="d">Cloudflare Pages + Pages Functions + D1 SQLite. Database beneran, tanpa Sheets</span></span></label>
+        <label class="opt"><input type="radio" name="backend" value="none">
+          <span class="box"><span class="t">📚 Tanpa backend</span>
+          <span class="d">localStorage saja. Khusus Latihan Mandiri</span></span></label>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <label class="f">Fitur aktif</label>
+      <div class="checks">
+        <label class="chk"><input type="checkbox" id="fToken" checked>
+          <span><b>Token ujian</b><small>Peserta masuk dengan kode token dari guru</small></span></label>
+        <label class="chk"><input type="checkbox" id="fAcakSoal" checked>
+          <span><b>Acak urutan soal</b><small>Tiap peserta mendapat urutan berbeda</small></span></label>
+        <label class="chk"><input type="checkbox" id="fAcakOpsi" checked>
+          <span><b>Acak opsi jawaban</b><small>Urutan A–D diacak per peserta</small></span></label>
+        <label class="chk"><input type="checkbox" id="fTimer" checked>
+          <span><b>Timer total</b><small>Hitung mundur; habis = otomatis kumpulkan</small></span></label>
+        <label class="chk"><input type="checkbox" id="fTabWarn" checked>
+          <span><b>Peringatan pindah tab</b><small>Hitung &amp; tampilkan saat peserta pindah tab</small></span></label>
+        <label class="chk"><input type="checkbox" id="fPin" checked>
+          <span><b>PIN guru untuk unduh rekap</b><small>Halaman guru terkunci PIN</small></span></label>
+        <label class="chk"><input type="checkbox" id="fAnalisis" checked>
+          <span><b>Analisis butir soal</b><small>Daya serap per indikator di halaman guru</small></span></label>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <label class="f">Identitas peserta</label>
+      <div class="opt-grid">
+        <label class="opt"><input type="radio" name="identitas" value="Nama + Kelas" checked>
+          <span class="box"><span class="t">👤 Nama + Kelas</span>
+          <span class="d">Sederhana, cukup untuk ulangan harian</span></span></label>
+        <label class="opt"><input type="radio" name="identitas" value="Nama + NIS + Kelas">
+          <span class="box"><span class="t">🪪 Nama + NIS + Kelas</span>
+          <span class="d">Lebih resmi, untuk tryout/ujian sekolah</span></span></label>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">5</span> Bank Soal</h2>
+    <p class="desc">Dari mana soal-soalnya berasal?</p>
+    <div class="opt-grid">
+      <label class="opt"><input type="radio" name="sumber" value="ai" checked>
+        <span class="box"><span class="t">🤖 AI buatkan dari materi/TP</span>
+        <span class="d">AI menyusun N soal sesuai komposisi &amp; TP di atas</span></span></label>
+      <label class="opt"><input type="radio" name="sumber" value="sendiri">
+        <span class="box"><span class="t">✍️ Saya tempel soal sendiri nanti</span>
+        <span class="d">AI sediakan template bank soal + contoh</span></span></label>
+    </div>
+  </section>
+
+  <div class="center">
+    <button class="btn btn-primary" id="btnGenerate" type="button">🪄 Generate Prompt</button>
+    <button class="btn btn-navy" id="btnSample" type="button">✨ Contoh Cepat</button>
+  </div>
+
+  <section class="card" id="outputCard">
+    <h2><span class="num">✓</span> Prompt Siap Pakai</h2>
+    <p class="desc">Salin prompt di bawah lalu tempel ke AI favorit Bapak/Ibu, atau tekan salah satu tombol "Kirim ke AI". <b>Catatan jujur:</b> membangun CBT butuh langkah deploy backend — ikuti panduan deploy di dalam prompt langkah demi langkah.</p>
+    <pre id="promptOut"></pre>
+    <div class="out-actions">
+      <button class="btn btn-line btn-sm" id="btnCopy" type="button">📋 Salin</button>
+      <button class="btn btn-line btn-sm" id="btnDownload" type="button">⬇️ Unduh .md</button>
+      <button class="btn btn-line btn-sm" id="btnSave" type="button">💾 Simpan ke Pustaka</button>
+    </div>
+    <div style="font-weight:700; color:var(--navy); margin-bottom:8px;">🚀 Kirim ke AI — prompt otomatis tersalin, lalu situs AI terbuka di tab baru</div>
+    <div class="ai-grid" id="aiRow"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">📚</span> Pustaka Saya</h2>
+    <p class="desc">Semua prompt tersimpan otomatis di perangkat ini.</p>
+    <div id="libList"></div>
+    <div class="out-actions" style="margin-top:12px; margin-bottom:0;">
+      <button class="btn btn-line btn-sm" id="btnExport" type="button">⬆️ Ekspor JSON</button>
+      <button class="btn btn-line btn-sm" id="btnImport" type="button">⬇️ Impor JSON</button>
+      <input type="file" id="fileImport" accept="application/json" style="display:none">
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="gold">💻 CBT Prompter</div>
+  <div style="margin-top:6px">@2026 GezyTech Prompter. Dikembangkan oleh PakGun</div>
+</footer>
+<div id="toast"></div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const LIB_KEY = "cbt_prompter_lib";
+
+/* ============ DATA ============ */
+const JENIS = [
+  {id:"ulangan", nama:"Ulangan Kelas", icon:"📝",
+   desc:"Token + nama/kelas → soal diacak → nilai terkirim ke rekap guru"},
+  {id:"tryout", nama:"Tryout", icon:"🎯",
+   desc:"Timer ketat, hasil + analisis per indikator"},
+  {id:"latihan", nama:"Latihan Mandiri", icon:"📚",
+   desc:"Tanpa login & backend, kunci + pembahasan langsung"}
+];
+const AI_SITES = [
+  {nama:"Muse", url:"https://muse.ai/"},
+  {nama:"ChatGPT", url:"https://chatgpt.com/"},
+  {nama:"Claude", url:"https://claude.ai/"},
+  {nama:"Gemini", url:"https://gemini.google.com/"},
+  {nama:"DeepSeek", url:"https://chat.deepseek.com/"},
+  {nama:"Grok", url:"https://grok.com/"},
+  {nama:"Copilot", url:"https://copilot.microsoft.com/"},
+  {nama:"Qwen", url:"https://chat.qwen.ai/"},
+  {nama:"Le Chat", url:"https://chat.mistral.ai/"},
+  {nama:"Perplexity", url:"https://www.perplexity.ai/"}
+];
+const FITUR_LABEL = {
+  fToken:"Token ujian", fAcakSoal:"Acak urutan soal", fAcakOpsi:"Acak opsi jawaban",
+  fTimer:"Timer total", fTabWarn:"Peringatan pindah tab",
+  fPin:"PIN guru untuk unduh rekap", fAnalisis:"Analisis butir soal"
+};
+
+/* ============ HELPERS ============ */
+function radioVal(name){
+  const r = document.querySelector('input[name="'+name+'"]:checked');
+  return r ? r.value : null;
+}
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 2400);
+}
+function esc(s){ return String(s==null?"":s); }
+function slug(s){
+  return String(s||"cbt").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,50) || "cbt";
+}
+function copyText(t){
+  if(!t){ toast("Generate dulu"); return; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>toast("Tersalin 📋")).catch(()=>fallbackCopy(t));
+  } else fallbackCopy(t);
+}
+function fallbackCopy(t){
+  const ta = document.createElement("textarea");
+  ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toast("Tersalin 📋"); }
+  catch(e){ toast("Gagal menyalin — salin manual"); }
+  ta.remove();
+}
+
+/* ============ RENDER JENIS ============ */
+function renderJenis(){
+  $("jenisGrid").innerHTML = JENIS.map(j=>
+    '<label class="opt"><input type="radio" name="jenis" value="'+j.id+'"'+(j.id==="ulangan"?" checked":"")+'>'+
+    '<span class="box"><span class="t">'+j.icon+" "+j.nama+'</span><span class="d">'+j.desc+'</span></span></label>'
+  ).join("");
+}
+
+/* ============ SYNC KONDISIONAL ============ */
+function syncJenis(){
+  const j = radioVal("jenis") || "ulangan";
+  const lat = (j === "latihan");
+  const rNone = document.querySelector('input[name="backend"][value="none"]');
+  ["github","cloudflare"].forEach(v=>{
+    const r = document.querySelector('input[name="backend"][value="'+v+'"]');
+    r.disabled = lat;
+    r.closest(".opt").classList.toggle("disabled", lat);
+  });
+  if(lat) rNone.checked = true;
+  ["fToken","fPin","fAnalisis"].forEach(id=>{
+    $(id).disabled = lat;
+    $(id).closest(".chk").classList.toggle("disabled", lat);
+    if(lat) $(id).checked = false;
+  });
+}
+function syncKom(){
+  const pg = +$("tPG").value || 0, is = +$("tIsian").value || 0, ur = +$("tUraian").value || 0;
+  const jum = +$("fJumlah").value || 0;
+  const tot = pg + is + ur;
+  const el = $("komTotal");
+  el.textContent = "Total komposisi: " + tot + " soal" + (tot === jum ? " ✓ cocok" : " ✗ harus = " + jum);
+  el.className = "kom-total " + (tot === jum ? "ok" : "bad");
+}
+
+/* ============ CONTOH CEPAT ============ */
+function isiContoh(){
+  document.querySelector('input[name="jenis"][value="ulangan"]').checked = true;
+  syncJenis();
+  $("fNama").value = "Ulangan Harian Bilangan Bulat";
+  $("fMapel").value = "Matematika";
+  $("fJenjang").value = "SMP";
+  $("fKelas").value = "7";
+  $("fJumlah").value = 10; $("fKkm").value = 75; $("fDurasi").value = 60;
+  $("fTP").value = "menentukan hasil operasi penjumlahan dan pengurangan bilangan bulat";
+  $("tPG").value = 7; $("tIsian").value = 2; $("tUraian").value = 1;
+  document.querySelector('input[name="backend"][value="github"]').checked = true;
+  ["fToken","fAcakSoal","fAcakOpsi","fTimer","fTabWarn","fPin","fAnalisis"].forEach(id=>{ $(id).disabled = false; $(id).checked = true; });
+  document.querySelector('input[name="identitas"][value="Nama + Kelas"]').checked = true;
+  document.querySelector('input[name="sumber"][value="ai"]').checked = true;
+  syncKom();
+  toast("Contoh cepat terisi — silakan ubah lalu Generate");
+}
+
+/* ============ FORM ============ */
+function getForm(){
+  const val = id => $(id).value.trim();
+  const jenis = JENIS.find(j=>j.id===radioVal("jenis")) || JENIS[0];
+  const backend = radioVal("backend") || "github";
+  return {
+    jenis, nama: val("fNama"), mapel: val("fMapel"), jenjang: val("fJenjang"), kelas: val("fKelas"),
+    jumlah: Math.max(1, Math.min(100, +val("fJumlah") || 10)),
+    kkm: Math.max(0, Math.min(100, +val("fKkm") || 75)),
+    durasi: Math.max(5, Math.min(300, +val("fDurasi") || 60)),
+    tp: val("fTP"),
+    kom: {
+      pg: Math.max(0, +val("tPG") || 0),
+      isian: Math.max(0, +val("tIsian") || 0),
+      uraian: Math.max(0, +val("tUraian") || 0)
+    },
+    backend,
+    fitur: {
+      fToken: $("fToken").checked, fAcakSoal: $("fAcakSoal").checked,
+      fAcakOpsi: $("fAcakOpsi").checked, fTimer: $("fTimer").checked,
+      fTabWarn: $("fTabWarn").checked, fPin: $("fPin").checked,
+      fAnalisis: $("fAnalisis").checked
+    },
+    identitas: radioVal("identitas") || "Nama + Kelas",
+    sumber: radioVal("sumber") || "ai"
+  };
+}
+function validate(d){
+  let ok = true;
+  [["fNama",d.nama],["fMapel",d.mapel],["fTP",d.tp]].forEach(([id,v])=>{
+    $(id).classList.toggle("invalid", !v); if(!v) ok = false;
+  });
+  const tot = d.kom.pg + d.kom.isian + d.kom.uraian;
+  const komOk = tot === d.jumlah;
+  ["tPG","tIsian","tUraian"].forEach(id=>$(id).classList.toggle("invalid", !komOk));
+  if(!komOk){ toast("Komposisi ("+tot+") harus sama dengan Jumlah soal ("+d.jumlah+")"); ok = false; }
+  if(!ok && komOk) toast("Lengkapi: nama ujian, mapel, dan TP");
+  return ok;
+}
+
+/* ============ BANGUN PROMPT ============ */
+function buildPrompt(d){
+  const L = [];
+  const adaBackend = d.backend !== "none";
+  const BACKEND_LABEL = {
+    github: "Paket GitHub (GitHub Pages + Google Sheets + Apps Script)",
+    cloudflare: "Paket Cloudflare (Cloudflare Pages + Pages Functions + D1 SQLite)",
+    none: "Tanpa backend (localStorage saja)"
+  };
+  const fiturAktif = Object.keys(FITUR_LABEL).filter(k=>d.fitur[k]);
+  const komTxt = d.kom.pg+" PG • "+d.kom.isian+" isian • "+d.kom.uraian+" uraian";
+  const judulBaris = '"' + d.nama + '"';
+
+  L.push("🎯 BUAT APLIKASI CBT");
+  L.push("");
+  L.push(judulBaris);
+  L.push(d.mapel + " • " + d.jenjang + (d.kelas ? " Kelas " + d.kelas : ""));
+  L.push("");
+  L.push("Buatkan aplikasi Computer Based Test (ujian online) yang lengkap dan siap pakai sesuai konfigurasi berikut.");
+  L.push("");
+  L.push("─── A. KONFIGURASI ───");
+  L.push("Jenis CBT      : " + d.jenis.nama);
+  L.push("Nama ujian     : " + d.nama);
+  L.push("Mapel          : " + d.mapel + " • " + d.jenjang + (d.kelas ? " Kelas " + d.kelas : ""));
+  L.push("Jumlah soal    : " + d.jumlah + " (" + komTxt + ")");
+  L.push("KKM / Durasi   : " + d.kkm + " / " + d.durasi + " menit");
+  L.push("Identitas      : " + d.identitas);
+  L.push("TP [TERKUNCI]  : " + d.tp + " — JANGAN diubah maknanya; seluruh soal harus setia pada TP ini.");
+  L.push("Backend        : " + (BACKEND_LABEL[d.backend] || d.backend));
+  L.push("Fitur aktif    : " + (fiturAktif.length ? fiturAktif.map(k=>FITUR_LABEL[k]).join(", ") : "tidak ada"));
+  L.push("Sumber bank soal: " + (d.sumber === "ai" ? "AI buatkan dari materi/TP di atas" : "Saya tempel soal sendiri nanti (sediakan template)"));
+  L.push("");
+
+  L.push("─── B. ARSITEKTUR WAJIB ───");
+  L.push("1. FRONTEND: SATU file index.html mandiri (HTML+CSS+JS inline, tanpa build tools, tanpa framework), mobile-friendly, bisa dibuka di HP Android dan laptop.");
+  if(d.backend === "github"){
+    L.push("2. BACKEND: Google Apps Script (satu file Code.gs) + satu Google Sheet sebagai database. Komunikasi memakai JSONP atau fetch ke Web App URL; peserta TIDAK perlu login Google.");
+    L.push("3. Hosting frontend: GitHub Pages. Dilarang memakai framework JS, server Node, atau VPS.");
+  } else if(d.backend === "cloudflare"){
+    L.push("2. API: Cloudflare Pages Functions — file di folder functions/api/*.js (mis. submit.js, hasil.js, token.js) sebagai SATU-SATUNYA penghubung antara browser dan database.");
+    L.push("3. DATABASE: Cloudflare D1 (SQLite) dengan file schema.sql berisi tabel: peserta, soal, jawaban, nilai. PENTING: D1 TIDAK boleh diakses langsung dari browser — semua query WAJIB lewat Pages Functions binding (env.DB).");
+    L.push("4. PIN guru disimpan sebagai environment variable (PIN_GURU), BUKAN di dalam kode.");
+    L.push("5. Hosting frontend: Cloudflare Pages. Dilarang memakai server Node/VPS/database berbayar — seluruh stack berjalan di paket gratis Cloudflare.");
+  } else {
+    L.push("2. TANPA BACKEND: nilai, jawaban, dan progres peserta disimpan di localStorage perangkat masing-masing. Tidak ada data yang dikirim ke mana pun.");
+    L.push("3. Dilarang memakai framework JS, server Node, atau VPS — cukup SATU file index.html yang diunggah ke hosting statis.");
+  }
+  L.push("");
+
+  L.push("─── C. ALUR PESERTA ───");
+  if(d.fitur.fToken && adaBackend) L.push("1. Halaman masuk: peserta mengisi TOKEN UJIAN + " + d.identitas + ". Token salah → tolak dengan pesan jelas.");
+  else L.push("1. Halaman masuk: peserta mengisi " + d.identitas + " lalu mulai.");
+  L.push("2. Pengerjaan: SATU soal per layar + peta navigasi nomor soal + tombol tandai \"ragu-ragu\".");
+  if(d.fitur.fTimer) L.push("3. Timer total " + d.durasi + " menit tampil di sudut layar; waktu habis = jawaban OTOMATIS dikumpulkan.");
+  if(d.fitur.fAcakSoal) L.push("4. Urutan soal DIACAK per peserta (seed dari token/nama agar stabil saat refresh).");
+  if(d.fitur.fAcakOpsi) L.push("5. Urutan opsi jawaban PG DIACAK per peserta (kunci mengikuti opsi yang benar).");
+  if(d.fitur.fTabWarn) L.push("6. PERINGATAN PINDAH TAB: hitung setiap kali peserta pindah tab/aplikasi; tampilkan jumlahnya di layar dan simpan ke rekap.");
+  L.push("7. Sebelum kumpulkan: tampilkan konfirmasi (\"Yakin kumpulkan? Masih ada N soal belum dijawab / N bertanda ragu-ragu\").");
+  if(d.jenis.id === "latihan")
+    L.push("8. Setelah selesai: tampilkan nilai 0–100 + KUNCI dan PEMBAHASAN tiap soal langsung (mode latihan).");
+  else
+    L.push("8. Setelah selesai: tampilkan nilai 0–100 + status TUNTAS / BELUM TUNTAS (KKM " + d.kkm + ")." + (adaBackend ? " Nilai + jawaban terkirim ke backend." : ""));
+  L.push("9. Progres & jawaban TERSIMPAN OTOMATIS — refresh browser atau HP mati tidak menghilangkan jawaban.");
+  L.push("");
+
+  L.push("─── D. ALUR GURU ───");
+  if(d.backend === "github"){
+    L.push("1. Halaman guru terpisah (mis. ?mode=guru)" + (d.fitur.fPin ? ", dikunci PIN yang mudah diganti di satu konstanta." : "."));
+    L.push("2. Tabel rekap dibaca dari Google Sheet: " + d.identitas + ", token, waktu mulai/selesai, nilai, status tuntas/belum" + (d.fitur.fTabWarn ? ", jumlah pindah tab" : "") + ".");
+    L.push("3. Tombol UNDUH REKAP CSV (satu klik, nama file berisi tanggal).");
+    if(d.fitur.fAnalisis) L.push("4. ANALISIS BUTIR SOAL sederhana: persentase jawaban benar per soal + per indikator, tampil sebagai tabel.");
+  } else if(d.backend === "cloudflare"){
+    L.push("1. Halaman guru terpisah (mis. /guru atau ?mode=guru)" + (d.fitur.fPin ? ", dikunci PIN yang dibaca dari environment variable PIN_GURU." : "."));
+    L.push("2. Tabel rekap dibaca via endpoint /api/hasil (query ke D1): " + d.identitas + ", token, waktu mulai/selesai, nilai, status tuntas/belum" + (d.fitur.fTabWarn ? ", jumlah pindah tab" : "") + ".");
+    L.push("3. Tombol UNDUH REKAP CSV (satu klik, nama file berisi tanggal).");
+    if(d.fitur.fAnalisis) L.push("4. ANALISIS BUTIR SOAL sederhana: persentase jawaban benar per soal + per indikator, tampil sebagai tabel.");
+  } else {
+    L.push("Tidak ada halaman guru — mode Latihan Mandiri: hasil hanya tersimpan di perangkat peserta (localStorage), tidak ada rekap terpusat.");
+  }
+  L.push("");
+
+  L.push("─── E. BANK SOAL ───");
+  L.push("Format data: SATU array JSON bernama BANK_SOAL; tiap soal = {tipe:\"pg\"|\"isian\"|\"uraian\", pertanyaan, opsi:[...] (khusus pg, 4 opsi), kunci, pembahasan, indikator}.");
+  if(d.sumber === "ai"){
+    L.push("Buatkan TEPAT " + d.jumlah + " soal sesuai komposisi (" + komTxt + ") dari TP di atas.");
+    L.push("HITUNG ULANG setiap kunci jawaban — kunci salah = aplikasi gagal. Bahasa Indonesia sederhana sesuai jenjang " + d.jenjang + ".");
+  } else {
+    L.push("Sediakan TEMPLATE array kosong yang siap ditempel soal + 2 CONTOH soal terisi (1 PG, 1 uraian) + komentar singkat cara menambah soal baru.");
+  }
+  L.push("");
+
+  L.push("─── F. PANDUAN DEPLOY UNTUK PEMULA ───");
+  if(d.backend === "github"){
+    L.push("Tulis panduan langkah bernomor dari NOL, untuk guru yang belum pernah coding. Tiap langkah: DI MANA klik + HASIL yang diharapkan + CARA CEK berhasil:");
+    L.push("0. Siapkan akun Google.");
+    L.push("1. Buat Google Sheet baru → beri nama sesuai ujian → catat: sheet pertama untuk PESERTA (kolom: waktu, " + d.identitas.toLowerCase() + ", token, nilai, status), sheet kedua untuk SOAL (opsional).");
+    L.push("2. Di Sheet: Extensions > Apps Script → hapus isi editor → tempel seluruh Code.gs dari aplikasi ini.");
+    L.push("3. Di Apps Script: Deploy > New deployment > pilih type \"Web app\" → Execute as: ME → Who has access: ANYONE → Deploy → izinkan akses (Allow).");
+    L.push("4. Salin Web App URL → tempel ke konstanta APPS_SCRIPT_URL di index.html.");
+    L.push("5. Uji: buka index.html, isi token & identitas, jawab 1 soal, kumpulkan → cek baris baru muncul di Sheet.");
+    L.push("6. Upload index.html ke GitHub Pages (atau drag ke Netlify Drop) → bagikan URL ke peserta.");
+    L.push("7. Jika gagal: cek 3 hal berurutan — (a) deployment terbaru sudah \"New version\", (b) akses = Anyone, (c) URL tersalin utuh tanpa spasi.");
+  } else if(d.backend === "cloudflare"){
+    L.push("Tulis panduan langkah bernomor dari NOL, untuk guru yang belum pernah coding. Tiap langkah: DI MANA klik + HASIL yang diharapkan + CARA CEK berhasil:");
+    L.push("0. Siapkan akun Cloudflare gratis (daftar dengan email).");
+    L.push("1. Di dashboard Cloudflare: Workers & Pages > D1 > Create database → beri nama sesuai ujian (mis. cbt-bilangan-bulat).");
+    L.push("2. Di halaman database D1: buka tab Console/Query → jalankan seluruh isi schema.sql → cek 4 tabel terbentuk: peserta, soal, jawaban, nilai.");
+    L.push("3. Buat project Pages baru: Workers & Pages > Create > Pages > hubungkan ke repo GitHub berisi index.html + folder functions/ → Deploy.");
+    L.push("4. Di Settings project Pages > Functions: tambah D1 binding dengan variable name DB → pilih database dari langkah 1.");
+    L.push("5. Di Settings > Environment variables: tambah PIN_GURU = PIN pilihan guru (mis. 6 digit).");
+    L.push("6. Redeploy project (Deployments > Retry deployment) → catat URL Pages → uji: isi token & identitas, jawab 1 soal, kumpulkan → cek baris baru di D1 lewat dashboard.");
+    L.push("7. Jika gagal: cek 3 hal berurutan — (a) D1 binding bernama DB terpasang, (b) PIN_GURU sudah ter-set, (c) deployment terbaru berstatus Live/Success.");
+  } else {
+    L.push("Deploy semudah mungkin (tanpa backend):");
+    L.push("1. Simpan aplikasi sebagai SATU file index.html.");
+    L.push("2. Upload ke GitHub Pages, drag-and-drop ke Netlify Drop, atau ke Cloudflare Pages.");
+    L.push("3. Bagikan URL ke peserta — selesai, tanpa akun Google dan tanpa setting apa pun.");
+  }
+  L.push("");
+
+  L.push("─── G. KRITERIA SELESAI ───");
+  let gKriteria = "0 console error di semua halaman; token salah ditolak dengan pesan jelas;";
+  if(d.backend === "github") gKriteria += " nilai peserta TERSIMPAN di Sheet; rekap CSV terunduh;";
+  else if(d.backend === "cloudflare") gKriteria += " nilai peserta TERSIMPAN di D1; rekap CSV terunduh;";
+  else gKriteria += " nilai tersimpan di localStorage;";
+  gKriteria += " timer habis → otomatis kumpulkan; refresh tidak menghilangkan jawaban; lolos simulasi 1 peserta penuh dari masuk sampai nilai keluar.";
+  L.push(gKriteria);
+  L.push("");
+
+  L.push("─── LARANGAN ───");
+  const penilaiDi = d.backend === "cloudflare" ? "Pages Functions (backend)"
+    : d.backend === "github" ? "Apps Script (backend)" : "tempat yang aman";
+  L.push("1. Dilarang menaruh kunci jawaban di frontend untuk mode Ulangan/Tryout — penilaian dikerjakan di " + penilaiDi + ".");
+  L.push("2. Dilarang memakai backend Node/VPS/database berbayar.");
+  const izinTxt = d.backend === "github" ? " (Execute as Me, Anyone)"
+    : d.backend === "cloudflare" ? " (D1 binding & environment variable)" : "";
+  L.push("3. Dilarang langkah deploy yang melompati izin akses" + izinTxt + ".");
+  L.push("4. Dilarang data/jawaban hilang saat refresh — autosave wajib.");
+  if(d.backend === "cloudflare") L.push("5. Dilarang mengakses D1 langsung dari browser — semua query WAJIB melalui Pages Functions.");
+  return L.join("\n");
+}
+
+/* ============ GENERATE & OUTPUT ============ */
+let lastPrompt = "", lastData = null;
+function doGenerate(){
+  const d = getForm();
+  if(!validate(d)) return;
+  lastData = d;
+  lastPrompt = buildPrompt(d);
+  $("promptOut").textContent = lastPrompt;
+  $("outputCard").classList.add("show");
+  const oc = $("outputCard");
+  if(oc.scrollIntoView) oc.scrollIntoView({behavior:"smooth", block:"start"});
+  toast("Prompt berhasil dibuat 🪄");
+}
+function doDownload(){
+  if(!lastPrompt){ toast("Generate dulu"); return; }
+  const md = "# " + lastData.nama + "\n\n```\n" + lastPrompt + "\n```\n";
+  const blob = new Blob([md], {type:"text/markdown;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = slug(lastData.nama) + ".md";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+/* ============ KIRIM KE AI ============ */
+function renderAI(){
+  $("aiRow").innerHTML = AI_SITES.map(s=>
+    '<button class="ai-btn" type="button" data-url="'+s.url+'">🚀 '+esc(s.nama)+'</button>'
+  ).join("");
+  $("aiRow").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    if(!lastPrompt){ toast("Generate dulu"); return; }
+    copyText(lastPrompt);
+    setTimeout(()=>window.open(b.dataset.url, "_blank"), 350);
+  }));
+}
+
+/* ============ PUSTAKA ============ */
+function loadLib(){
+  try{ const a = JSON.parse(localStorage.getItem(LIB_KEY)); return Array.isArray(a) ? a : []; }
+  catch(e){ return []; }
+}
+function saveLib(a){
+  try{ localStorage.setItem(LIB_KEY, JSON.stringify(a)); return true; }
+  catch(e){ toast("Gagal menyimpan — penyimpanan penuh?"); return false; }
+}
+function doSave(){
+  if(!lastData){ toast("Generate dulu"); return; }
+  const d = lastData, lib = loadLib();
+  lib.unshift({id:"a"+Date.now().toString(36), nama:d.nama, mapel:d.mapel, jenis:d.jenis.nama,
+    jumlah:d.jumlah, ts:Date.now(), prompt:lastPrompt});
+  if(saveLib(lib)){ renderLib(); toast("Tersimpan di Pustaka 💾"); }
+}
+function renderLib(){
+  const lib = loadLib(), wrap = $("libList");
+  if(!lib.length){
+    wrap.innerHTML = '<div class="empty-lib">📭 Belum ada prompt CBT tersimpan.<br>Generate lalu tekan <b>💾 Simpan ke Pustaka</b>.</div>';
+    return;
+  }
+  wrap.innerHTML = lib.map(it=>{
+    const tgl = new Date(it.ts).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"});
+    return '<div class="lib-item"><div class="meta"><div class="jt">'+esc(it.nama)+'</div>'+
+      '<div class="js">'+esc(it.jenis||"")+' • '+esc(it.mapel||"")+' • '+esc(it.jumlah||"")+' soal • '+tgl+'</div></div>'+
+      '<div class="acts"><button class="btn btn-line btn-sm" data-act="load" data-id="'+it.id+'">📥 Muat</button>'+
+      '<button class="btn btn-line btn-sm" data-act="dl" data-id="'+it.id+'">⬇️</button>'+
+      '<button class="btn btn-line btn-sm" data-act="del" data-id="'+it.id+'">🗑️</button></div></div>';
+  }).join("");
+  wrap.querySelectorAll("button[data-act]").forEach(b=>b.addEventListener("click",()=>{
+    const lib2 = loadLib(), it = lib2.find(x=>x.id===b.dataset.id);
+    if(!it) return;
+    if(b.dataset.act==="load"){ $("promptOut").textContent = it.prompt; lastPrompt = it.prompt; $("outputCard").classList.add("show"); toast("Dimuat dari Pustaka 📥"); }
+    else if(b.dataset.act==="dl"){
+      const blob = new Blob(["# "+it.nama+"\n\n```\n"+it.prompt+"\n```\n"],{type:"text/markdown;charset=utf-8"});
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+      a.download = slug(it.nama)+".md"; document.body.appendChild(a); a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+    else if(b.dataset.act==="del"){
+      saveLib(lib2.filter(x=>x.id!==it.id)); renderLib(); toast("Dihapus 🗑️");
+    }
+  }));
+}
+function doExport(){
+  const lib = loadLib();
+  if(!lib.length){ toast("Pustaka masih kosong"); return; }
+  const blob = new Blob([JSON.stringify(lib,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "pustaka-cbt-prompter.json";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("Pustaka diekspor ⬆️");
+}
+function doImport(file){
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const arr = JSON.parse(r.result);
+      if(!Array.isArray(arr)) throw new Error("format salah");
+      const cur = loadLib(), ids = new Set(cur.map(x=>x.id));
+      let n = 0;
+      arr.forEach(it=>{ if(it && it.prompt && !ids.has(it.id)){ cur.push(it); n++; } });
+      if(saveLib(cur)){ renderLib(); toast(n ? n+" prompt diimpor ✅" : "Tidak ada yang baru"); }
+    }catch(e){ toast("File tidak valid"); }
+  };
+  r.readAsText(file);
+}
+
+/* ============ INIT ============ */
+document.addEventListener("DOMContentLoaded", ()=>{
+  renderJenis(); renderAI(); renderLib(); syncKom();
+  document.querySelectorAll('input[name="jenis"]').forEach(r=>
+    r.addEventListener("change", syncJenis));
+  ["fJumlah","tPG","tIsian","tUraian"].forEach(id=>
+    $(id).addEventListener("input", syncKom));
+  syncJenis();
+  $("btnSample").addEventListener("click", isiContoh);
+  $("btnGenerate").addEventListener("click", doGenerate);
+  $("btnCopy").addEventListener("click", ()=>copyText(lastPrompt));
+  $("btnDownload").addEventListener("click", doDownload);
+  $("btnSave").addEventListener("click", doSave);
+  $("btnExport").addEventListener("click", doExport);
+  $("btnImport").addEventListener("click", ()=>$("fileImport").click());
+  $("fileImport").addEventListener("change", e=>{ if(e.target.files[0]) doImport(e.target.files[0]); e.target.value=""; });
+});
+</script>
+</body>
+</html>
