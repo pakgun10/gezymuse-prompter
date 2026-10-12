@@ -550,7 +550,7 @@ function isiContoh(){
 function getForm(){
   const val = id => $(id).value.trim();
   const jenis = (document.querySelector('input[name=jenis]:checked')||{}).value || "lengkap";
-  const fase = (document.querySelector('input[name=fase]:checked')||{}).value || "mam";
+  const faseLangkah = (document.querySelector('input[name=fase]:checked')||{}).value || "mam";
   const prinsip = [];
   if($("pSadar").checked) prinsip.push("Berkesadaran");
   if($("pMakna").checked) prinsip.push("Bermakna");
@@ -562,7 +562,7 @@ function getForm(){
     temaPAUD: val("fTemaPAUD"), bidangBK: val("fBidangBK"),
     jml: Math.max(1, Math.min(12, +val("fJml") || 1)),
     waktuList: getWaktuList(),
-    jenis, fase, prinsip,
+    jenis, faseLangkah, prinsip,
     model: val("fModel"), output: val("fOutput"),
     tp: val("fTP"), dimensi: getDimensi(),
     kompetensi: val("fKompetensi"), bermakna: val("fBermakna"),
@@ -585,9 +585,9 @@ function validate(d){
 function strukturDokumen(d){
   const L = [];
   const jenisNama = JENIS.find(j=>j.id===d.jenis).nama;
-  const faseLbl = d.fase === "mam" ? "Memahami → Mengaplikasi → Merefleksi" : "Pendahuluan → Inti → Penutup";
+  const faseLbl = d.faseLangkah === "mam" ? "Memahami → Mengaplikasi → Merefleksi" : "Pendahuluan → Inti → Penutup";
   const prinsipLbl = d.prinsip.length ? d.prinsip.join(", ") : "Berkesadaran, Bermakna, Menggembirakan";
-  const langkahFase = d.fase === "mam"
+  const langkahFase = d.faseLangkah === "mam"
     ? ["MEMAHAMI (beri label Prinsip: "+prinsipLbl+")", "MENGAPLIKASI (beri label Prinsip: "+prinsipLbl+")", "MEREFLEKSI (beri label Prinsip: "+prinsipLbl+")"]
     : ["PENDAHULUAN", "INTI", "PENUTUP"];
   const idLine = d.jenjang==="TK/PAUD"
@@ -699,7 +699,7 @@ function buildPrompt(d){
   if(isBK(d.mapel)) L.push("Bidang layanan    : " + d.bidangBK);
   alokasiRinci().forEach(x=>L.push(x));
   L.push("Model             : " + d.model);
-  L.push("Fase langkah      : " + (d.fase==="mam" ? "Memahami – Mengaplikasi – Merefleksi" : "Pendahuluan – Inti – Penutup"));
+  L.push("Fase langkah      : " + (d.faseLangkah==="mam" ? "Memahami – Mengaplikasi – Merefleksi" : "Pendahuluan – Inti – Penutup"));
   L.push("Format keluaran   : " + d.output);
   L.push("");
   L.push("─── B. JANGKAR REGULASI (WAJIB DIPATUHI, JANGAN DILANGGAR) ───");
