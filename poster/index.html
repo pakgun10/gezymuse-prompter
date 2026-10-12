@@ -166,6 +166,11 @@
       <label class="f" for="fTP">Tujuan Pembelajaran (jangkar)</label>
       <textarea id="fTP" style="min-height:56px" placeholder="Tulis 1–2 TP terkait, pastikan dari CP/ATP atau Panduan Mapel"></textarea>
     </div>
+    <div style="margin-top:14px">
+      <label class="f" for="fContoh">Contoh yang boleh ditampilkan <span style="font-weight:400;color:var(--muted)">(opsional)</span></label>
+      <textarea id="fContoh" style="min-height:56px" placeholder="Contoh hitungan, rumus, atau data yang BOLEH tampil persis di poster — satu baris satu contoh.&#10;Contoh:&#10;7 − (−3) = 7 + 3 = 10&#10;−5 + (−8) = −13"></textarea>
+      <div class="hint">Tanpa contoh, AI dilarang menambah fakta/ilmu baru. Isi ini bila ingin contoh konkret tertulis jelas di poster.</div>
+    </div>
   </section>
 
   <!-- 2. UKURAN -->
@@ -399,6 +404,7 @@ function isiContoh(){
   $("fMapel").value = "IPAS"; $("fJenjang").value = "SD";
   $("fPesan").value = "Matikan keran saat menggosok gigi\nGunakan air bekas cucian beras untuk menyiram tanaman\nLaporkan keran bocor ke guru piket";
   $("fTP").value = "memahami pentingnya menghemat air dalam kehidupan sehari-hari";
+  $("fContoh").value = "";
   document.querySelector('input[name=ukuran][value="a3"]').checked = true;
   $("fGaya").value = "flat"; $("fMood").value = "Ceria & menyemangati";
   $("eQR").checked = true; $("fQRLink").value = "https://sekolah.example.id/hemat-air";
@@ -414,6 +420,7 @@ function getForm(){
   return {
     judul: val("fJudul"), target: val("fTarget"), mapel: val("fMapel"), jenjang: val("fJenjang"),
     pesan: val("fPesan").split("\n").map(s=>s.trim()).filter(Boolean),
+    contoh: val("fContoh").split("\n").map(s=>s.trim()).filter(Boolean),
     tp: val("fTP"), ukuran,
     gaya: val("fGaya"), gayaLbl: $("fGaya").options[$("fGaya").selectedIndex].text,
     mood: val("fMood"),
@@ -454,12 +461,18 @@ function buildKonten(d){
   else L.push("Tujuan Pembelajaran: [AI merumuskan 1–2 TP yang relevan dari CP/ATP atau Panduan Mapel]");
   L.push("Pesan utama yang WAJIB tersampaikan (boleh diringkas, jangan ditambah fakta baru):");
   d.pesan.forEach(p=>L.push("  - " + p));
+  if(d.contoh.length){
+    L.push("");
+    L.push("CONTOH yang BOLEH ditampilkan persis di poster (ini BUKAN fakta baru yang dilarang — tulis persis seperti di bawah, termasuk simbol & angka):");
+    d.contoh.forEach(c=>L.push("  • " + c));
+  }
   L.push("");
   L.push("─── C. STRUKTUR KONTEN POSTER ───");
   L.push("Susun dengan hierarki visual yang jelas, dari atas ke bawah:");
   L.push("1. HEADLINE — buatkan 3 opsi judul besar (maks 5 kata tiap opsi), pilih 1 yang terbaik dan tandai ⭐");
   L.push("2. SUBHEADLINE — 1 kalimat penjelas (maks 12 kata)");
   L.push("3. ISI — " + d.pesan.length + " poin dari pesan utama, tiap poin MAKSIMAL 8 kata + 1 ikon yang cocok (tulis nama ikonnya, mis. 💧🚰🌱)");
+  if(d.contoh.length) L.push("   Cantumkan contoh dari bagian CONTOH pada poin yang relevan — tampilkan persis seperti tertulis (contoh dihitung di luar batas 8 kata per poin).");
   if(d.eCTA) L.push("4. AJAKAN (call-to-action) — 1 kalimat ajakan yang kuat dan positif");
   if(d.eLogo) L.push("5. LOGO — beri ruang kosong untuk logo sekolah di sudut atas");
   if(d.eQR && d.qrLink) L.push("6. QR CODE — sertakan catatan 'QR menuju: " + d.qrLink + "' di dekat footer");
@@ -475,9 +488,10 @@ function buildKonten(d){
   L.push("");
   L.push("─── E. ATURAN ───");
   L.push("1. Bahasa Indonesia sederhana sesuai " + d.target + ".");
-  L.push("2. Total kata di poster MAKSIMAL 60 kata (tidak termasuk footer).");
+  L.push("2. Total kata di poster MAKSIMAL " + (d.contoh.length ? "100" : "60") + " kata (tidak termasuk footer).");
   L.push("3. Dilarang typo — ejaan harus sempurna.");
-  L.push("4. Dilarang menambah fakta/ilmu baru di luar pesan utama di atas.");
+  if(d.contoh.length) L.push("4. Dilarang menambah fakta/ilmu baru di luar pesan utama — KECUALI contoh pada bagian CONTOH di atas yang WAJIB ditampilkan persis.");
+  else L.push("4. Dilarang menambah fakta/ilmu baru di luar pesan utama di atas.");
   L.push("5. Keluaran: (1) naskah poster per bagian, (2) spesifikasi desain (warna hex, font, komposisi) siap dibawa ke Canva.");
   return L.join("\n");
 }
@@ -548,7 +562,7 @@ function doSave(){
   const d = lastData, lib = loadLib();
   lib.unshift({id:"s"+Date.now().toString(36), judul:d.judul, mapel:d.mapel,
     ukuran:d.ukuran.nama, ts:Date.now(), konten:lastKonten, img:lastImg, form:{
-      target:d.target, jenjang:d.jenjang, pesan:d.pesan.join("\n"), tp:d.tp, gaya:d.gaya,
+      target:d.target, jenjang:d.jenjang, pesan:d.pesan.join("\n"), contoh:(d.contoh||[]).join("\n"), tp:d.tp, gaya:d.gaya,
       mood:d.mood, cPrimer:d.cPrimer, cSekunder:d.cSekunder, cAksen:d.cAksen,
       eLogo:d.eLogo, eQR:d.eQR, eCTA:d.eCTA, eKredit:d.eKredit,
       qrLink:d.qrLink, footer:d.footer, nama:d.nama, ukuranId:d.ukuran.id
