@@ -187,8 +187,6 @@
       </div>
     </div>
     <div class="checks" style="margin-top:14px">
-      <label class="chk"><input type="checkbox" id="oUtama" checked>
-        <span><b>Baris materi utama</b><small>Tambah 1 baris pembuka: konteks payung (isu/fakta objektif) + rancangan kompetensi umum</small></span></label>
       <label class="chk"><input type="checkbox" id="oSumber" checked>
         <span><b>Saran sumber data aktual</b><small>AI menulis dari mana guru bisa memperoleh data nyatanya (situs BMKG, publikasi BPS, observasi)</small></span></label>
       <label class="chk"><input type="checkbox" id="oVerifikasi" checked>
@@ -293,7 +291,7 @@ function isiContoh(){
   $("fPertemuan").value = 8; $("fJP").value = 2; $("fMenit").value = 40;
   JENIS_CTX.forEach(j=>$(j.id).checked = true);
   $("fLevel").value = "C4";
-  ["oUtama","oSumber","oVerifikasi","oFungsi"].forEach(id=>$(id).checked = true);
+  ["oSumber","oVerifikasi","oFungsi"].forEach(id=>$(id).checked = true);
   toast("Contoh terisi — silakan ubah lalu Generate");
 }
 
@@ -308,7 +306,7 @@ function getForm(){
     jp: Math.max(1, Math.min(6, +val("fJP") || 1)),
     menit: Math.max(10, Math.min(90, +val("fMenit") || 40)),
     jenis, level: val("fLevel"),
-    oUtama: $("oUtama").checked, oSumber: $("oSumber").checked,
+    oSumber: $("oSumber").checked,
     oVerifikasi: $("oVerifikasi").checked, oFungsi: $("oFungsi").checked
   };
 }
@@ -355,8 +353,7 @@ function buildPrompt(d){
   L.push("─── D. SPESIFIKASI TABEL ───");
   L.push("Materi esensial: " + d.materi);
   L.push("Alokasi: " + d.pertemuan + " pertemuan × " + d.jp + " JP (@" + d.menit + " menit)");
-  if(d.oUtama) L.push("Jumlah baris: 1 baris MATERI UTAMA (konteks payung berupa isu/fakta objektif + rancangan kompetensi umum) + " + d.pertemuan + " baris submateri, satu per pertemuan.");
-  else L.push("Jumlah baris: " + d.pertemuan + " baris submateri, satu per pertemuan.");
+  L.push("Jumlah baris: " + d.pertemuan + " baris submateri, satu per pertemuan. Jangan membuat baris materi utama — langsung mulai dari submateri pertemuan 1.");
   L.push("Header kolom tabel: Materi/Submateri | Konteks | Indikator Kognisi/Keterampilan/Sikap");
   L.push("");
   L.push("─── E. CONTOH STRUKTUR (tirukan formatnya, JANGAN tiru isinya) ───");
