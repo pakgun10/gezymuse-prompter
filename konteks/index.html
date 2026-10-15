@@ -90,6 +90,13 @@
   .ai-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
   .ai-label{font-size:.85rem; font-weight:700; color:var(--navy); margin-top:16px;}
   .ai-label .hint{font-weight:400;}
+  .chain{display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+    background:#fff; border:1px solid var(--line); border-radius:999px; padding:9px 20px;
+    margin:0 auto 20px; max-width:660px; font-size:.85rem; color:var(--muted);}
+  .chain a{color:var(--navy); font-weight:700; text-decoration:none;}
+  .chain a:hover{text-decoration:underline;}
+  .chain .on{background:var(--navy); color:#fff; font-weight:700; padding:3px 12px; border-radius:999px;}
+  .chain .arr{color:var(--gold2); font-weight:700;}
 </style>
 </head>
 <body>
@@ -102,6 +109,12 @@
 </header>
 
 <main>
+  <div class="chain">
+    <span>🔗 Rantai LK 6:</span>
+    <span class="on">1. Konteks</span><span class="arr">→</span>
+    <a href="../matriks/">2. Matriks</a><span class="arr">→</span>
+    <a href="../bahan-ajar-lk6/">3. Bahan Ajar</a>
+  </div>
   <!-- 1. IDENTITAS -->
   <section class="card">
     <div class="sec-head-row">
@@ -209,6 +222,7 @@
       <button class="btn btn-navy btn-sm" id="btnCopy" type="button">📋 Salin Prompt</button>
       <button class="btn btn-ghost btn-sm" id="btnSave" type="button">💾 Simpan ke Pustaka</button>
       <button class="btn btn-ghost btn-sm" id="btnDownload" type="button">⬇️ Unduh .md</button>
+      <a class="btn btn-navy btn-sm" href="../matriks/" style="text-decoration:none">➡️ Lanjut ke Matriks Prompter</a>
     </div>
     <div class="ai-label">🚀 Kirim prompt ke AI pilihanmu <span class="hint">(prompt otomatis tersalin, lalu situs AI terbuka di tab baru — tinggal tempel/Ctrl+V)</span></div>
     <div class="ai-row" id="aiRow"></div>

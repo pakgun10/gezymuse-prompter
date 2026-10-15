@@ -100,6 +100,14 @@
   .ai-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
   .ai-label{font-size:.85rem; font-weight:700; color:var(--navy); margin-top:16px;}
   .ai-label .hint{font-weight:400;}
+  .chain{display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+    background:#fff; border:1px solid var(--line); border-radius:999px; padding:9px 20px;
+    margin:0 auto 20px; max-width:660px; font-size:.85rem; color:var(--muted);}
+  .chain a{color:var(--navy); font-weight:700; text-decoration:none;}
+  .chain a:hover{text-decoration:underline;}
+  .chain .on{background:var(--navy); color:#fff; font-weight:700; padding:3px 12px; border-radius:999px;}
+  .chain .arr{color:var(--gold2); font-weight:700;}
+  .paste-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px;}
 </style>
 </head>
 <body>
@@ -112,6 +120,12 @@
 </header>
 
 <main>
+  <div class="chain">
+    <span>🔗 Rantai LK 6:</span>
+    <a href="../konteks/">1. Konteks</a><span class="arr">→</span>
+    <span class="on">2. Matriks</span><span class="arr">→</span>
+    <a href="../bahan-ajar-lk6/">3. Bahan Ajar</a>
+  </div>
   <!-- 1. IDENTITAS -->
   <section class="card">
     <div class="sec-head-row">
@@ -167,8 +181,11 @@
   <section class="card">
     <h2><span class="num">2</span> Tabel Konteks (Bahan Baku)</h2>
     <p class="desc">Tempel hasil tabel Identifikasi Konteks (LK 6.1) — dari <b>Konteks Prompter</b>. N baris konteks akan menjadi tepat N baris matriks.</p>
+    <div class="paste-row">
+      <label class="f" for="fTabel" style="margin:0">Tabel konteks (format Markdown) <span class="req">*</span></label>
+      <button class="sample-link" id="btnPasteTabel" type="button">📋 tempel dari clipboard</button>
+    </div>
     <div>
-      <label class="f" for="fTabel">Tabel konteks (format Markdown) <span class="req">*</span></label>
       <textarea class="tall" id="fTabel" placeholder="Tempel tabel Markdown dari Konteks Prompter, contoh:&#10;&#10;| Materi/Submateri | Konteks | Indikator Kognisi/Keterampilan/Sikap |&#10;|---|---|---|&#10;| Konsep bilangan bulat dan garis bilangan | Fenomena Ilmiah: data suhu BMKG ... | Berpikir: ... Berperilaku: ... |"></textarea>
       <div class="hint">AI akan menghitung sendiri jumlah barisnya (N) dan membuat tepat N baris matriks — satu konteks menjadi satu baris.</div>
     </div>
@@ -218,6 +235,7 @@
       <button class="btn btn-navy btn-sm" id="btnCopy" type="button">📋 Salin Prompt</button>
       <button class="btn btn-ghost btn-sm" id="btnSave" type="button">💾 Simpan ke Pustaka</button>
       <button class="btn btn-ghost btn-sm" id="btnDownload" type="button">⬇️ Unduh .md</button>
+      <a class="btn btn-navy btn-sm" href="../bahan-ajar-lk6/" style="text-decoration:none">➡️ Lanjut ke Bahan Ajar Prompter</a>
     </div>
     <div class="ai-label">🚀 Kirim prompt ke AI pilihanmu <span class="hint">(prompt otomatis tersalin, lalu situs AI terbuka di tab baru — tinggal tempel/Ctrl+V)</span></div>
     <div class="ai-row" id="aiRow"></div>
@@ -289,6 +307,12 @@ function toast(msg){
   clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 2400);
 }
 function esc(s){ return String(s==null?"":s); }
+function pasteFromClipboard(targetId){
+  const done = t => { $(targetId).value = t; toast("Ditempel dari clipboard 📋"); };
+  if(navigator.clipboard && navigator.clipboard.readText){
+    navigator.clipboard.readText().then(done).catch(()=>toast("Izin clipboard ditolak — tempel manual (Ctrl+V)"));
+  } else toast("Browser tidak mendukung — tempel manual (Ctrl+V)");
+}
 
 /* ============ RENDER ============ */
 function renderModels(){
@@ -515,6 +539,7 @@ function doImport(file){
 document.addEventListener("DOMContentLoaded", ()=>{
   renderModels(); renderAIButtons(); renderLib();
   $("btnSample").addEventListener("click", isiContoh);
+  $("btnPasteTabel").addEventListener("click", ()=>pasteFromClipboard("fTabel"));
   $("btnGenerate").addEventListener("click", doGenerate);
   $("btnCopy").addEventListener("click", ()=>copyText(lastPrompt));
   $("btnSave").addEventListener("click", doSave);
