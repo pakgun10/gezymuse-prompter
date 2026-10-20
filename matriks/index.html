@@ -196,7 +196,8 @@
     <h2><span class="num">3</span> Aturan Main</h2>
     <p class="desc">Ketentuan yang mengikat AI saat menyusun matriks.</p>
     <label class="f">Model pembelajaran</label>
-    <div class="opt-grid" id="modelGrid" style="margin-bottom:16px"></div>
+    <div class="opt-grid" id="modelGrid" style="margin-bottom:8px"></div>
+    <div class="hint" style="margin-bottom:16px">Pilih satu model untuk dipakai di semua pertemuan, atau pilih <b>Per Baris (Otomatis)</b> agar AI menyesuaikan model dengan karakteristik tiap submateri &amp; konteks — model boleh berbeda-beda antarpertemuan (ideal untuk materi esensial dengan banyak pertemuan).</div>
     <div class="grid2">
       <div>
         <label class="f" for="fLevel">KKO kognisi minimal</label>
@@ -267,6 +268,8 @@
 "use strict";
 /* ============ DATA ============ */
 const MODELS = [
+  {id:"auto", nama:"Per Baris (Otomatis)", desk:"Disarankan — AI memilih model paling cocok untuk TIAP baris sesuai karakteristik submateri & konteks; model boleh berbeda-beda antarpertemuan",
+   aturan:"model konstruktivisme yang PALING COCOK UNTUK TIAP BARIS, dipilih dari 5E, PBL, Discovery Learning, Inkuiri, PJBL, atau STEM berdasarkan karakteristik submateri dan konteksnya (bukan satu model yang sama untuk semua baris)"},
   {id:"m5e", nama:"5E", desk:"Engage → Explore → Explain → Elaborate → Evaluate",
    aturan:"model 5E dengan sintaks: Engage (pancing rasa ingin tahu lewat konteks), Explore (murid menyelidiki konteks), Explain (murid menjelaskan temuan), Elaborate (perluas ke situasi baru), Evaluate (penilaian & refleksi)"},
   {id:"pbl", nama:"PBL", desk:"Orientasi masalah → penyelidikan → presentasi → evaluasi",
@@ -278,9 +281,14 @@ const MODELS = [
   {id:"pjbl", nama:"PJBL", desk:"Pertanyaan mendasar → rencana → eksekusi proyek → presentasi → refleksi",
    aturan:"Project Based Learning dengan sintaks: pertanyaan mendasar dari konteks, menyusun rencana proyek, eksekusi & monitoring, presentasi produk, refleksi"},
   {id:"stem", nama:"STEM", desk:"Tantangan nyata → riset → desain → uji → presentasi",
-   aturan:"STEM dengan sintaks: tantangan nyata dari konteks, riset, desain solusi, uji & perbaikan, presentasi"},
-  {id:"auto", nama:"Otomatis", desk:"AI memilih model paling cocok untuk tiap baris",
-   aturan:"model konstruktivisme yang PALING COCOK untuk tiap baris (pilih di antara 5E, PBL, Discovery Learning, Inkuiri, PJBL, STEM); tulis nama model yang dipakai di awal kolom langkah tiap baris"}
+   aturan:"STEM dengan sintaks: tantangan nyata dari konteks, riset, desain solusi, uji & perbaikan, presentasi"}
+];
+/* Aturan penguat untuk mode Per Baris: AI memilih model per baris sesuai karakteristik submateri & konteks */
+const AUTO_RULES = [
+  "Panduan memilih model per baris — konteks eksperimen/pengukuran yang menemukan pola → Discovery Learning atau Inkuiri; masalah keputusan nyata → PBL; eksplorasi & pengolahan data → 5E; tantangan ukur–desain–uji → STEM; menghasilkan produk nyata → PJBL.",
+  "Variasi yang wajar antarbaris: boleh memakai model yang sama untuk 2 baris bila karakteristiknya mirip, tetapi dilarang satu model yang sama untuk seluruh baris.",
+  "Tulis nama model di awal kolom Langkah-Langkah Pembelajaran tiap baris dengan format: **Model: [nama model]** — diikuti sintaks model tersebut.",
+  "Tahap penyelidikan tiap baris tetap WAJIB memuat interaksi langsung murid dengan konteks."
 ];
 const LEVEL_LBL = {C4:"menganalisis", C5:"mengevaluasi", C6:"mencipta"};
 const AI_LIST = [
@@ -339,7 +347,7 @@ function isiContoh(){
   $("fMateri").value = "Pemahaman konsep dan penerapan operasi hitung bilangan bulat termasuk literasi finansial";
   $("fTP").value = "Peserta didik dapat memahami konsep bilangan bulat dan menerapkan operasi hitungnya untuk memecahkan masalah kontekstual termasuk literasi finansial";
   $("fPertemuan").value = 8; $("fJP").value = 2; $("fMenit").value = 40;
-  document.querySelector('input[name=model][value=m5e]').checked = true;
+  document.querySelector('input[name=model][value=auto]').checked = true;
   $("fLevel").value = "C4";
   $("oLengkapi").checked = true; $("oRubrik").checked = true;
   $("fTabel").value =
@@ -388,6 +396,9 @@ function buildPrompt(d){
   L.push("─── B. ATURAN MATRIKS (wajib dipatuhi) ───");
   L.push("1. KKTP / Tujuan Pembelajaran Harian: gunakan indikator pada tabel konteks sebagai bahan" + (d.oLengkapi ? "; LENGKAPI/tambahkan indikator bila ada subkonsep yang belum terwadahi (instruksi LK 6.2 no. 2)" : "") + ". Wajib memakai Kata Kerja Operasional (KKO) yang menuntut kognisi tinggi, minimal level " + d.level + " (" + LEVEL_LBL[d.level] + ").");
   L.push("2. Langkah-langkah pembelajaran: gunakan " + d.model.aturan + ". Tiap baris WAJIB memuat aktivitas di mana murid BERINTERAKSI LANGSUNG dengan konteks (mengukur, mendata, mensimulasikan, mengaudit, mewawancarai, menginvestigasi) — dilarang konteks yang hanya diceritakan guru lalu tidak dipakai.");
+  if(d.model.id==="auto"){
+    L.push("2a. MODE PER BARIS (wajib dipatuhi): (a) " + AUTO_RULES[0] + " (b) " + AUTO_RULES[1] + " (c) " + AUTO_RULES[2] + " (d) " + AUTO_RULES[3]);
+  }
   L.push("3. Sarana & media: tulis sumber ajar, media, alat, dan bahan yang KONKRET untuk tiap baris; WAJIB memasukkan alat nyata dari lingkungan; dilarang hanya menulis \"buku paket\".");
   L.push("4. Alokasi waktu: " + d.pertemuan + " pertemuan × " + d.jp + " JP (@" + d.menit + " menit) — satu baris matriks untuk satu pertemuan, proporsional.");
   L.push("");
@@ -416,6 +427,9 @@ function buildPrompt(d){
   L.push("3. Dilarang langkah yang hanya ceramah/tanya jawab tanpa interaksi murid dengan konteks.");
   L.push("4. Dilarang media generik — setiap baris harus menyebut alat/bahan konkret.");
   L.push("5. Dilarang keluar dari materi esensial di atas.");
+  if(d.model.id==="auto"){
+    L.push("6. Dilarang tidak mencantumkan nama model pada tiap baris, dan dilarang memakai satu model yang sama untuk seluruh baris (mode per baris).");
+  }
   return L.join("\n");
 }
 
