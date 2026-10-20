@@ -399,7 +399,7 @@ function buildPrompt(d){
   if(d.model.id==="auto"){
     L.push("2a. MODE PER BARIS (wajib dipatuhi): (a) " + AUTO_RULES[0] + " (b) " + AUTO_RULES[1] + " (c) " + AUTO_RULES[2] + " (d) " + AUTO_RULES[3]);
   }
-  L.push("3. Sarana & media: tulis sumber ajar, media, alat, dan bahan yang KONKRET untuk tiap baris; WAJIB memasukkan alat nyata dari lingkungan; dilarang hanya menulis \"buku paket\".");
+  L.push("3. Sarana & media: tulis sumber ajar, media, alat, dan bahan yang KONKRET untuk tiap baris; WAJIB memasukkan alat nyata dari lingkungan; dilarang hanya menulis \"buku paket\". Sumber ajar/buku WAJIB sesuai dengan mata pelajaran \"" + d.mapel + "\" — dilarang menyebut buku atau sumber ajar dari mata pelajaran lain (contoh: dilarang \"Buku Pedoman IPA\" pada matriks Matematika).");
   L.push("4. Alokasi waktu: " + d.pertemuan + " pertemuan × " + d.jp + " JP (@" + d.menit + " menit) — satu baris matriks untuk satu pertemuan, proporsional.");
   L.push("");
   L.push("─── C. SPESIFIKASI TABEL ───");
@@ -425,7 +425,7 @@ function buildPrompt(d){
   L.push("1. Dilarang jumlah baris matriks berbeda dari jumlah baris tabel konteks.");
   L.push("2. Dilarang KKTP memakai KKO di bawah " + d.level + ".");
   L.push("3. Dilarang langkah yang hanya ceramah/tanya jawab tanpa interaksi murid dengan konteks.");
-  L.push("4. Dilarang media generik — setiap baris harus menyebut alat/bahan konkret.");
+  L.push("4. Dilarang media generik — setiap baris harus menyebut alat/bahan konkret. Dilarang menulis sumber ajar/buku dari mata pelajaran lain.");
   L.push("5. Dilarang keluar dari materi esensial di atas.");
   if(d.model.id==="auto"){
     L.push("6. Dilarang tidak mencantumkan nama model pada tiap baris, dan dilarang memakai satu model yang sama untuk seluruh baris (mode per baris).");
